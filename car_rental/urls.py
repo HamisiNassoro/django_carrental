@@ -21,3 +21,8 @@ from django.urls import path,include
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) ### this is for local use if using docker service on NGINX can be commented out
+
+
+admin.site.site_header = "Car Rental Admin"
+admin.site.site_title = "Car Renatal Admin Portal"
+admin.site.index_title = "Welcome to the Car Rental Portal"
