@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from datetime import timedelta  # configure simple_jwt and djoser
 from pathlib import Path
 
 import environ
@@ -61,6 +62,8 @@ LOCAL_APPS = [
     "apps.users",
     "apps.profiles",
     "apps.ratings",
+    "djoser",
+    "rest_framework_simplejwt",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -149,6 +152,49 @@ MEDIA_ROOT = BASE_DIR / "mediafiles"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "users.User"  ###Telling django the location of our CustomUserModel
+
+### Configuring REST_FRAMEWORK
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
+
+### configuring SIMPLE_JWT
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": (
+        "Bearer",
+        "JWT",
+    ),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "SIGNING_KEY": env("SIGNING_KEY"),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+}
+
+### configuring DJOSER
+DJOSER = {
+    "LOGIN_FIELD": "email",  # name of the field in the user model to be used for login
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "SET_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "USERNAME_RESET_CONFIRM_URL": "email/reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": True,
+    ### Declaring dictionary mapping for djoser serializer names to the serializer classes
+    "SERIALIZERS": {
+        "user_create": "apps.users.serializers.CreateUserSerializer,",
+        "user": "apps.users.serializers.UserSerializer",
+        "current_user": "apps.users.serializers.UserSerializer",
+        "user_delete": "djoser.serializers.UserDeleteSerializer",
+    },
+}
+
 
 
 import logging
