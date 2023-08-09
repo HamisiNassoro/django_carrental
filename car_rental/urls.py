@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1/auth/", include("djoser.urls")),
     path("api/v1/auth/", include("djoser.urls.jwt")),
+    path("api/profile/", include("apps.profiles.urls")),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) ### this is for local use if using docker service on NGINX can be commented out
 
 
