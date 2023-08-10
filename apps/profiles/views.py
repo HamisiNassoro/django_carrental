@@ -34,6 +34,15 @@ class TopAgentsListAPIView(generics.ListAPIView):
     queryset = Profile.objects.filter(top_agent=True)
     serializer_class = ProfileSerializer
 
+class RentersListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Profile.objects.filter(renters=True)
+    serializer_class = ProfileSerializer
+
+class CarOwnersListAPIView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Profile.objects.filter(car_owner=True)
+    serializer_class = ProfileSerializer
 
 class GetProfileAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
