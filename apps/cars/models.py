@@ -78,7 +78,7 @@ class Car(TimeStampedUUIDModel):
         max_length=255, unique=True
     )
     price = models.DecimalField(
-        verbose_name=_("Price"), max_digits=8, decimal_places=2, default=0.0
+        verbose_name=_("Price"), max_digits=10, decimal_places=2, default=0.0
     )
     tax = models.DecimalField(
         verbose_name=_("Car Tax"),
@@ -87,7 +87,7 @@ class Car(TimeStampedUUIDModel):
         default=0.15,
         help_text="15% car tax charged",
     )
-    total_seats = models.IntegerField(verbose_name=_("Number of floors"), default=0)
+    total_seats = models.IntegerField(verbose_name=_("Number of Seats"), default=0)
     advert_type = models.CharField(
         verbose_name=_("Advert Type"),
         max_length=50,
@@ -129,9 +129,7 @@ class Car(TimeStampedUUIDModel):
         verbose_name=_("Published Status"), default=False
     )
     views = models.IntegerField(verbose_name=_("Total Views"), default=0)
-    lon = models.FloatField(_("Longitude"))
-    lat = models.FloatField(_("Latitude"))
-    geom = models.PointField(srid=4326)
+    location = models.PointField()
 
     objects = models.Manager()
     published = CarPublishedManager()
