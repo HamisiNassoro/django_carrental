@@ -41,6 +41,7 @@ class CarSerializer(serializers.ModelSerializer):
             "photo4",
             "published_status",
             "views",
+            "location",
         ]
 
     def get_user(self, obj):
