@@ -1,0 +1,16 @@
+#!/bin/bash
+
+##this script puppose ensures that models are migrated and django server is running
+
+##if any command on code fails for any reason, then the entire shell script fails
+set -o errexit
+
+##fail exit if one of pipe commands fails
+set -o pipefail
+
+##this exits if any of variables is not set
+set -o nounset
+
+python3 manage.py migrate --no-input
+python3 manage.py collectstatic --no-input
+python3 manage.py runserver 0.0.0.0:8000

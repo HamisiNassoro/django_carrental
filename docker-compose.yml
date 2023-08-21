@@ -1,0 +1,47 @@
+##version of compose
+version: "3"
+##services that make up our application
+services:
+    api:
+        build:
+            context: .
+            dockerfile: ./docker/local/django/Dockerfile
+        command: /start
+        volumes: ##volume is used to map files and folders on host to the container, if change code in host it also changes code in docker container
+            - .:/app
+            - static_volume:/app/staticfiles
+            - media_volume:/app/mediafiles
+
+        ports:
+            - "8000:8000" ##first 8000 on container the other on machine
+        
+        env_file:
+            - .env
+        depends_on:
+            - postgres-db ##can call it any name 
+
+        networks:
+            - carrental-react ##can call it any name
+
+    postgres-db:
+        image: postgres:12.0-alpine
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/ ##default location(directory path)
+        environment:
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+        networks:
+            - carrental-react
+
+
+networks:
+    carrental-react:
+        driver: bridge ##default
+
+volumes:
+    postgres_data:
+    static_volume:
+    media_volume:
