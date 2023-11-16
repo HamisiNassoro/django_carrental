@@ -39,6 +39,8 @@ RUN apt-get update \
 ##upgrading version of pip
 RUN pip3 install --upgrade pip
 
+RUN apt-get update && apt-get install -y gdal-bin python3-gdal
+
 ##installing requirements and ensuring that they are cached...
 ##...copying requirements.txt to the working directory
 COPY ./requirements.txt /app/requirements.txt 
