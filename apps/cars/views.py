@@ -11,8 +11,7 @@ from rest_framework.views import APIView
 from .exceptions import CarNotFound
 from .models import Car, CarViews
 from .pagination import CarPagination
-from .serializers import (CarCreateSerializer, CarSerializer,
-                          CarViewSerializer)
+from .serializers import CarCreateSerializer, CarSerializer, CarViewSerializer
 
 # Create your views here.
 
