@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -o errexit
+
+set -o nounset
+
+watchmedo auto-restart -d car_rental/ -p "*.py" -- celery worker -A car_rental --loglevel=info
+
+# celery -A car_rental worker -l INFO

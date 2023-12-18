@@ -19,7 +19,8 @@ services:
         env_file:
             - .env
         depends_on:
-            - postgres-db ##can call it any name 
+            - postgres-db ##can call it any name
+            - redis 
 
         networks:
             - carrental-react ##can call it any name
@@ -38,6 +39,43 @@ services:
         networks:
             - carrental-react
     
+    redis:
+        image: redis:5-alpine
+        networks:
+            - carrental-react
+
+    celery_worker:
+        build:
+            context: .
+            dockerfile: ./docker/local/django/Dockerfile
+        command: /start-celeryworker
+        volumes:
+            - .:/app
+        env_file:
+            - .env
+        depends_on:
+            - redis
+            - postgres-db
+        networks:
+            - carrental-react
+
+    flower:
+        build:
+            context: .
+            dockerfile: ./docker/local/django/Dockerfile
+        command: /start-flower
+        volumes:
+            - .:/app
+        env_file:
+            - .env
+        ports:
+            - "5557:5555"
+        depends_on:
+            - redis
+            - postgres-db
+        networks:
+            - carrental-react
+
     nginx:
         restart: always
         depends_on:

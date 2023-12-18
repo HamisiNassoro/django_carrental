@@ -69,6 +69,16 @@ RUN sed -i 's/\r$//g' /start
 ##make the start shell script executable
 RUN chmod +x /start
 
+##for celery worker
+COPY ./docker/local/django/celery/worker/start /start-celeryworker
+RUN sed -i 's/\r$//g' /start-celeryworker
+RUN chmod +x /start-celeryworker
+
+##for flower
+COPY ./docker/local/django/celery/flower/start /start-flower
+RUN sed -i 's/\r$//g' /start-flower
+RUN chmod +x /start-flower
+
 ##directory for entrypoint
 ENTRYPOINT [ "/entrypoint"]
 
