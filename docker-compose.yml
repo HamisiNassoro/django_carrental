@@ -12,6 +12,8 @@ services:
             - static_volume:/app/staticfiles
             - media_volume:/app/mediafiles
 
+        expose:
+            - "8000"
         # comment this off when using nginx to serve the api
         # ports:
         #     - "8000:8000" ##first 8000 on container the other on machine
