@@ -1,0 +1,17 @@
+##use node image
+FROM node:16-alpine3.12
+
+LABEL version="1.0"
+LABEL description="React Frontend for the Car Rental API"
+
+WORKDIR /app
+
+COPY ./package*.json ./
+
+RUN npm install
+
+##copy all the files in the souce directory into the container
+##copy everything in the current directory to the root directory in the container
+COPY . .
+
+CMD [ "npm", "run", "start" ]
