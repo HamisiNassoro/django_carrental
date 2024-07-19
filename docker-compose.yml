@@ -30,7 +30,7 @@ services:
     client:
         build:
             context: ./client
-            dockerfile: Dockerfile.dev
+            dockerfile: ./docker/local/Dockerfile
         restart: on-failure
         volumes:
             - ./client:/app  ##mapping current local directory to the app working directory inside the container
