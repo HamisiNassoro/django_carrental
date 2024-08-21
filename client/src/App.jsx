@@ -1,12 +1,32 @@
-import React from 'react';
-
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
+import HomePage from "./pages/HomePage";
+import CarsPage from "./pages/CarsPage";
 
 const App = () => {
-  return (
-    <div className="App">
-      <h1>Welcome to the Car Rental</h1>
-    </div>
-  );
-}
+	return (
+		<>
+			<Router>
+				<Header />
+				<main className="py-3">
+					<Routes>
+						<Route path="/" element={<HomePage />}></Route>
+					</Routes>
+					<Routes>
+						<Route
+							path="/cars"
+							element={<CarsPage />}
+						></Route>
+					</Routes>
+				</main>
+				<Footer />
+			</Router>
+			<ToastContainer />
+		</>
+	);
+};
 
 export default App;
