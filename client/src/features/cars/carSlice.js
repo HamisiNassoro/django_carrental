@@ -43,7 +43,7 @@ export const carSlice = createSlice({
 			.addCase(getCars.fulfilled, (state, action) => {
 				state.isLoading = false;
 				state.isSuccess = true;
-				state.cars = action.payload;
+				state.cars = action.payload.results;
 			})
 			.addCase(getCars.rejected, (state, action) => {
 				state.isLoading = false;
