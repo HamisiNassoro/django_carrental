@@ -9,6 +9,7 @@ class CarSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     country = CountryField(name_only=True)
     cover_photo = serializers.SerializerMethodField()
+    profile_photo = serializers.SerializerMethodField()
     photo1 = serializers.SerializerMethodField()
     photo2 = serializers.SerializerMethodField()
     photo3 = serializers.SerializerMethodField()
@@ -35,6 +36,7 @@ class CarSerializer(serializers.ModelSerializer):
             "advert_type",
             "car_type",
             "cover_photo",
+            "profile_photo",
             "photo1",
             "photo2",
             "photo3",
@@ -61,6 +63,9 @@ class CarSerializer(serializers.ModelSerializer):
 
     def get_photo4(self, obj):
         return obj.photo4.url
+    
+    def get_profile_photo(self,obj):
+        return obj.user.profile.profile_photo.url
 
 
 class CarCreateSerializer(serializers.ModelSerializer):
