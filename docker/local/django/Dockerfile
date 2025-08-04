@@ -1,6 +1,6 @@
-##since we are in dev we use python version 10
+##since we are in dev we use python version 13
 ##use FROM directory and select a base Image
-FROM python:3.10.0-slim-buster
+FROM python:3.13-slim
 
 ##setting up home directory
 ENV APP_HOME=/app
@@ -39,11 +39,11 @@ RUN apt-get update \
 ##upgrading version of pip
 RUN pip3 install --upgrade pip
 
-RUN apt-get update && apt-get install -y gdal-bin python3-gdal
+# GDAL installation removed for development (not using GeoDjango)
 
 ##installing requirements and ensuring that they are cached...
 ##...copying requirements.txt to the working directory
-COPY ./requirements.txt /app/requirements.txt 
+COPY ./requirements.txt /app/requirements.txt
 
 ##installing the requirements
 RUN pip3 install -r requirements.txt
@@ -60,7 +60,7 @@ RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
 ##starting the shell script...
-##...copying start script from directory path 
+##...copying start script from directory path
 COPY ./docker/local/django/start /start
 
 ##command for line endings on start script...converting any windows line endings to unix line endings

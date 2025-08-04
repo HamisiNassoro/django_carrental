@@ -1,6 +1,7 @@
 import React from "react";
-import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import { GiHouse } from "react-icons/gi";
+import { Container, Nav, Navbar, Button } from "react-bootstrap";
+import { GiCarWheel } from "react-icons/gi";
+import { FaPhone } from "react-icons/fa";
 import { LinkContainer } from "react-router-bootstrap";
 
 const Header = () => {
@@ -8,15 +9,21 @@ const Header = () => {
 		<header>
 			<Navbar
 				fixed="top"
-				bg="dark"
-				variant="dark"
+				bg="white"
+				variant="light"
 				expand="lg"
 				collapseOnSelect
+				style={{
+					boxShadow: '0 2px 20px rgba(0,0,0,0.1)',
+					backdropFilter: 'blur(10px)',
+					backgroundColor: 'rgba(255,255,255,0.95)'
+				}}
 			>
 				<Container>
 					<LinkContainer to="/">
-						<Navbar.Brand>
-							<GiHouse className="nav-icon" /> Car Rental
+						<Navbar.Brand className="fw-bold" style={{ fontSize: '1.5rem' }}>
+							<GiCarWheel className="nav-icon me-2" style={{ color: '#FFD700' }} />
+							<span style={{ color: '#333' }}>Car Rental</span>
 						</Navbar.Brand>
 					</LinkContainer>
 					<Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -24,26 +31,27 @@ const Header = () => {
 						id="basic-navbar-nav"
 						className="justify-content-end"
 					>
-						<Nav className="ml-auto">
+						<Nav className="me-auto">
 							<LinkContainer to="/">
-								<Nav.Link>Home</Nav.Link>
+								<Nav.Link className="fw-medium px-3">Home</Nav.Link>
 							</LinkContainer>
 							<LinkContainer to="/cars">
-								<Nav.Link>Cars</Nav.Link>
+								<Nav.Link className="fw-medium px-3">Vehicles</Nav.Link>
 							</LinkContainer>
-
-							<NavDropdown
-								title="Dropdown"
-								id="basic-nav-dropdown"
-							>
-								<NavDropdown.Item href="#action/3.1">
-									Action
-								</NavDropdown.Item>
-								<NavDropdown.Item href="#action/3.2">
-									Another action
-								</NavDropdown.Item>
-							</NavDropdown>
+							<Nav.Link href="#details" className="fw-medium px-3">Details</Nav.Link>
+							<LinkContainer to="/about">
+								<Nav.Link className="fw-medium px-3">About Us</Nav.Link>
+							</LinkContainer>
+							<LinkContainer to="/contact">
+								<Nav.Link className="fw-medium px-3">Contact Us</Nav.Link>
+							</LinkContainer>
 						</Nav>
+						<div className="d-flex align-items-center">
+							<div className="me-3 text-muted">
+								<FaPhone className="me-1" />
+								Need help? +996 247-1680
+							</div>
+						</div>
 					</Navbar.Collapse>
 				</Container>
 			</Navbar>

@@ -7,6 +7,9 @@ import Header from "./components/Header";
 import NotFound from "./components/NotFound";
 import HomePage from "./pages/HomePage";
 import CarsPage from "./pages/CarsPage";
+import CarDetailPage from "./pages/CarDetailPage";
+import AboutUsPage from "./pages/AboutUsPage";
+import ContactUsPage from "./pages/ContactUsPage";
 
 const App = () => {
 	return (
@@ -19,6 +22,18 @@ const App = () => {
 						<Route
 							path="/cars"
 							element={<CarsPage />}
+						/>
+						<Route
+							path="/car/:id"
+							element={<CarDetailPage />}
+						/>
+						<Route
+							path="/about"
+							element={<AboutUsPage />}
+						/>
+						<Route
+							path="/contact"
+							element={<ContactUsPage />}
 						/>
 						<Route path="*" element={<NotFound />} />
 					</Routes>
