@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class CarFilter(django_filters.FilterSet):
-    
+
     advert_type = django_filters.CharFilter(
         field_name="advert_type", lookup_expr="iexact"
     )
@@ -51,7 +51,7 @@ class ListAllCarsAPIView(generics.ListAPIView):
 
 
 class ListAgentsCarsAPIView(generics.ListAPIView):
-    
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CarSerializer
     pagination_class = CarPagination
     filter_backends = [
@@ -69,7 +69,7 @@ class ListAgentsCarsAPIView(generics.ListAPIView):
             "-created_at"
         )  ### Getting all properties of a certain user/agent
         return queryset
-    
+
 
 class CarViewsAPIView(generics.ListAPIView):
     serializer_class = CarViewSerializer

@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Nav, Navbar, Button } from "react-bootstrap";
 import { GiCarWheel } from "react-icons/gi";
-import { FaPhone } from "react-icons/fa";
+import { FaPhone, FaCar } from "react-icons/fa";
 import { LinkContainer } from "react-router-bootstrap";
 
 const Header = () => {
@@ -38,6 +38,12 @@ const Header = () => {
 							<LinkContainer to="/cars">
 								<Nav.Link className="fw-medium px-3">Vehicles</Nav.Link>
 							</LinkContainer>
+							<LinkContainer to="/my-cars">
+								<Nav.Link className="fw-medium px-3">
+									<FaCar className="me-1" />
+									My Cars
+								</Nav.Link>
+							</LinkContainer>
 							<Nav.Link href="#details" className="fw-medium px-3">Details</Nav.Link>
 							<LinkContainer to="/about">
 								<Nav.Link className="fw-medium px-3">About Us</Nav.Link>
@@ -51,6 +57,11 @@ const Header = () => {
 								<FaPhone className="me-1" />
 								Need help? +996 247-1680
 							</div>
+							<LinkContainer to="/login">
+								<Button variant="outline-primary" size="sm">
+									Login
+								</Button>
+							</LinkContainer>
 						</div>
 					</Navbar.Collapse>
 				</Container>

@@ -1,5 +1,3 @@
-##version of compose
-version: "3.9"
 ##services that make up our application
 services:
     api:
@@ -33,6 +31,8 @@ services:
         volumes:
             - ./client:/app  ##mapping current local directory to the app working directory inside the container
             - /app/node_modules ##this helps avoid copying over local node_modules with the docker container
+        ports:
+            - "3000:3000" ##expose React development server port
         networks:
             - carrental-react
 
@@ -96,7 +96,7 @@ services:
             context: ./docker/local/nginx
             dockerfile: Dockerfile
         ports:
-            - "8080:80"
+            - "8081:80"
         networks:
             - carrental-react
 

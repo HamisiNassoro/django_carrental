@@ -32,7 +32,7 @@ RUN apt-get update \
   && apt-get install -y build-essential \
   && apt-get install -y libpq-dev \
   && apt-get install -y gettext \
-  && apt-get -y install netcat gcc postgresql \
+  && apt-get -y install netcat-openbsd gcc postgresql-client \
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
@@ -47,6 +47,9 @@ COPY ./requirements.txt /app/requirements.txt
 
 ##installing the requirements
 RUN pip3 install -r requirements.txt
+
+## Fix for pkg_resources issue with Python 3.13
+RUN pip3 install setuptools
 
 ##run the entrypoint shell script...
 ##...copy entrypoint file from its directory path
