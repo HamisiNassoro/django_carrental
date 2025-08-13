@@ -192,12 +192,20 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": True,
     ### Declaring dictionary mapping for djoser serializer names to the serializer classes
     "SERIALIZERS": {
-        "user_create": "apps.users.serializers.CreateUserSerializer,",
+        "user_create": "apps.users.serializers.CreateUserSerializer",
         "user": "apps.users.serializers.UserSerializer",
         "current_user": "apps.users.serializers.UserSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
 }
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 

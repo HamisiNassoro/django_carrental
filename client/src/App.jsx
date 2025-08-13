@@ -6,6 +6,8 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import NotFound from "./components/NotFound";
 import Login from "./components/Login";
+import Register from "./components/Register";
+import AuthTest from "./components/AuthTest";
 import HomePage from "./pages/HomePage";
 import CarsPage from "./pages/CarsPage";
 import CarDetailPage from "./pages/CarDetailPage";
@@ -26,6 +28,14 @@ const App = () => {
 						<Route
 							path="/login"
 							element={<Login />}
+						/>
+						<Route
+							path="/register"
+							element={<Register />}
+						/>
+						<Route
+							path="/auth-test"
+							element={<AuthTest />}
 						/>
 						<Route
 							path="/cars"

@@ -21,6 +21,9 @@ const login = async (userData) => {
   const response = await api.post("/v1/auth/jwt/create/", userData);
   if (response.data.access) {
     setToken(response.data.access);
+    // Get user data after successful login
+    const userResponse = await api.get("/v1/auth/users/me/");
+    return userResponse.data;
   }
   return response.data;
 };
@@ -28,6 +31,7 @@ const login = async (userData) => {
 // Logout user
 const logout = () => {
   removeToken();
+  localStorage.removeItem("user");
 };
 
 // Get current user

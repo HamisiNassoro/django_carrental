@@ -12,8 +12,13 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+    console.log("Request to:", config.url);
+    console.log("Token present:", !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("Authorization header added");
+    } else {
+      console.log("No token found, request will be unauthenticated");
     }
     return config;
   },
@@ -25,11 +30,14 @@ api.interceptors.request.use(
 // Response interceptor to handle auth errors
 api.interceptors.response.use(
   (response) => {
+    console.log("Response received:", response.status, response.config.url);
     return response;
   },
   (error) => {
+    console.log("Response error:", error.response?.status, error.config?.url, error.response?.data);
     if (error.response?.status === 401) {
       // Token expired or invalid
+      console.log("401 error - clearing auth data and redirecting to login");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";

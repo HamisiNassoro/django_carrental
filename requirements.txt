@@ -26,3 +26,4 @@ django-cors-headers>=4.0.0
 argh==0.26.2
 PyYAML>=6.0.0
 watchdog==1.0.2
+gunicorn>=21.0.0
