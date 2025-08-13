@@ -1,5 +1,3 @@
-##version of compose
-version: "3.9"
 ##services that make up our application
 services:
     api:
@@ -14,15 +12,13 @@ services:
 
         expose:
             - "8000"
-        # comment this off when using nginx to serve the api
-        # ports:
-        #     - "8000:8000" ##first 8000 on container the other on machine
-        
+        ports:
+            - "8000:8000" ##first 8000 on container the other on machine
+
         env_file:
             - .env
         depends_on:
-            - postgres-db ##can call it any name
-            - redis 
+            - redis
 
         networks:
             - carrental-react ##can call it any name
@@ -35,23 +31,25 @@ services:
         volumes:
             - ./client:/app  ##mapping current local directory to the app working directory inside the container
             - /app/node_modules ##this helps avoid copying over local node_modules with the docker container
-        networks:
-            - carrental-react
-    
-    postgres-db:
-        # image: postgres:12.0-alpine #this is if not using postgis
-        image: postgis/postgis:12-3.1-alpine
         ports:
-            - "5432:5432"
-        volumes:
-            - postgres_data:/var/lib/postgresql/data/ ##default location(directory path)
-        environment:
-            - POSTGRES_USER=${POSTGRES_USER}
-            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-            - POSTGRES_DB=${POSTGRES_DB}
+            - "3000:3000" ##expose React development server port
         networks:
             - carrental-react
-    
+
+    # postgres-db:
+    #     # image: postgres:12.0-alpine #this is if not using postgis
+    #     image: postgis/postgis:12-3.1-alpine
+    #     ports:
+    #         - "5432:5432"
+    #     volumes:
+    #         - postgres_data:/var/lib/postgresql/data/ ##default location(directory path)
+    #     environment:
+    #         - POSTGRES_USER=${POSTGRES_USER}
+    #         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    #         - POSTGRES_DB=${POSTGRES_DB}
+    #     networks:
+    #         - carrental-react
+
     redis:
         image: redis:5-alpine
         networks:
@@ -68,7 +66,6 @@ services:
             - .env
         depends_on:
             - redis
-            - postgres-db
         networks:
             - carrental-react
 
@@ -85,7 +82,6 @@ services:
             - "5557:5555"
         depends_on:
             - redis
-            - postgres-db
         networks:
             - carrental-react
 
@@ -100,7 +96,7 @@ services:
             context: ./docker/local/nginx
             dockerfile: Dockerfile
         ports:
-            - "8080:80"
+            - "8081:80"
         networks:
             - carrental-react
 
@@ -110,6 +106,6 @@ networks:
         driver: bridge ##default
 
 volumes:
-    postgres_data:
+    # postgres_data:
     static_volume:
     media_volume:

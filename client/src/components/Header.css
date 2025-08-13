@@ -1,0 +1,279 @@
+.modern-navbar {
+	padding: 0.5rem 0;
+	z-index: 1030;
+}
+
+.modern-navbar.scrolled {
+	padding: 0.3rem 0;
+}
+
+.brand-container {
+	display: flex;
+	align-items: center;
+	text-decoration: none;
+	transition: transform 0.3s ease;
+}
+
+.brand-container:hover {
+	transform: scale(1.05);
+}
+
+.brand-logo {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 12px;
+	box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.brand-icon {
+	color: white;
+	font-size: 1.2rem;
+	animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.brand-text {
+	font-size: 1.5rem;
+	font-weight: 700;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+.custom-toggler {
+	border: none;
+	padding: 0.5rem;
+	color: #667eea;
+	transition: all 0.3s ease;
+}
+
+.custom-toggler:hover {
+	transform: scale(1.1);
+}
+
+.main-nav {
+	gap: 0.5rem;
+}
+
+.nav-item {
+	position: relative;
+	padding: 0.75rem 1rem !important;
+	border-radius: 8px;
+	transition: all 0.3s ease;
+	font-weight: 500;
+	color: #6c757d !important;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.nav-item:hover {
+	color: #667eea !important;
+	background: rgba(102, 126, 234, 0.1);
+	transform: translateY(-2px);
+}
+
+.nav-item.active {
+	color: #667eea !important;
+	background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+	font-weight: 600;
+}
+
+.nav-text {
+	position: relative;
+	z-index: 1;
+}
+
+.nav-icon {
+	font-size: 0.9rem;
+}
+
+.header-right {
+	display: flex;
+	align-items: center;
+	gap: 2rem;
+}
+
+.contact-info {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 1rem;
+	background: rgba(102, 126, 234, 0.05);
+	border-radius: 12px;
+	border: 1px solid rgba(102, 126, 234, 0.1);
+	transition: all 0.3s ease;
+}
+
+.contact-info:hover {
+	background: rgba(102, 126, 234, 0.1);
+	transform: translateY(-2px);
+}
+
+.contact-icon {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+}
+
+.contact-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.help-text {
+	font-size: 0.7rem;
+	color: #6c757d;
+	font-weight: 500;
+}
+
+.phone-number {
+	font-size: 0.85rem;
+	color: #495057;
+	font-weight: 600;
+}
+
+.auth-buttons {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.user-welcome {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	background: rgba(102, 126, 234, 0.1);
+	border-radius: 8px;
+	border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.user-icon {
+	color: #667eea;
+	font-size: 0.9rem;
+}
+
+.welcome-text {
+	font-size: 0.85rem;
+	color: #495057;
+	font-weight: 500;
+}
+
+.login-btn, .register-btn, .logout-btn, .auth-test-btn {
+	padding: 0.5rem 1.25rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.85rem;
+	transition: all 0.3s ease;
+	border: none;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	text-decoration: none;
+}
+
+.login-btn {
+	background: transparent;
+	color: #667eea;
+	border: 2px solid #667eea;
+}
+
+.login-btn:hover {
+	background: #667eea;
+	color: white;
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.register-btn {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border: 2px solid transparent;
+}
+
+.register-btn:hover {
+	background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.logout-btn {
+	background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+	color: white;
+}
+
+.logout-btn:hover {
+	background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.auth-test-btn {
+	background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+	color: white;
+}
+
+.auth-test-btn:hover {
+	background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+}
+
+.btn-icon {
+	font-size: 0.8rem;
+}
+
+@media (max-width: 991px) {
+	.header-right {
+		flex-direction: column;
+		gap: 1rem;
+		align-items: stretch;
+		margin-top: 1rem;
+	}
+
+	.contact-info {
+		justify-content: center;
+	}
+
+	.auth-buttons {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.main-nav {
+		margin-bottom: 1rem;
+	}
+}
+
+@media (max-width: 576px) {
+	.brand-text {
+		font-size: 1.2rem;
+	}
+
+	.contact-info {
+		padding: 0.4rem 0.8rem;
+	}
+
+	.phone-number {
+		font-size: 0.8rem;
+	}
+}

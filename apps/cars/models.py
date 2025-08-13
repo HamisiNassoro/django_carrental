@@ -3,7 +3,7 @@ import string
 
 from autoslug import AutoSlugField
 from django.contrib.auth import get_user_model
-from django.contrib.gis.db import models
+from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
@@ -129,7 +129,7 @@ class Car(TimeStampedUUIDModel):
         verbose_name=_("Published Status"), default=False
     )
     views = models.IntegerField(verbose_name=_("Total Views"), default=0)
-    location = models.PointField()
+    location = models.CharField(max_length=255, default="0,0", help_text="Location coordinates (latitude,longitude)")
 
     objects = models.Manager()
     published = CarPublishedManager()
