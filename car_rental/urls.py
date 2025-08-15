@@ -26,6 +26,7 @@ urlpatterns = [
     path("api/cars/", include("apps.cars.urls")),
     path("api/ratings/", include("apps.ratings.urls")),
     path("api/enquiries/", include("apps.enquiries.urls")),
+    path("api/bookings/", include("apps.bookings.urls")),
 ]## + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) ### this is for local use if using docker service on NGINX can be commented out
 
 
