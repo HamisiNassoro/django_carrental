@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ],
                 "constraints": [
                     models.CheckConstraint(
-                        condition=models.Q(("end_date__gte", models.F("start_date"))),
+                        check=models.Q(end_date__gte=models.F("start_date")),
                         name="booking_end_after_start",
                     )
                 ],
