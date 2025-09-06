@@ -56,8 +56,8 @@ THIRD_PARTY_APPS = [
     "phonenumber_field",
     "djoser",
     "rest_framework_simplejwt",
-    "djcelery_email",
-    "corsheaders",
+    # "djcelery_email",  # Temporarily commented out due to missing Celery
+    # "corsheaders",  # Temporarily commented out due to missing dependency
 ]
 
 LOCAL_APPS = [
@@ -74,7 +74,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    # 'corsheaders.middleware.CorsMiddleware',  # Temporarily commented out
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

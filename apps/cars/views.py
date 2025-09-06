@@ -1,17 +1,30 @@
 import logging
 
 import django_filters
-from django.db.models import query
+from django.db.models import query, Q, F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+# from django.contrib.gis.geos import Point  # Removed - causes GDAL dependency
+# from django.contrib.gis.db.models.functions import Distance  # Removed
+# from django.contrib.gis.measure import D  # Removed
+from django.core.cache import cache
+import math
 
 from .exceptions import CarNotFound
 from .models import Car, CarViews
 from .pagination import CarPagination
-from .serializers import CarCreateSerializer, CarSerializer, CarViewSerializer
+from .serializers import (
+    CarSerializer,
+    CarDetailSerializer,
+    CarCreateSerializer,
+    CarLocationSerializer,
+    CarSearchSerializer,
+    CarViewSerializer
+)
+from apps.bookings.models import Booking, BookingStatus
 
 # Create your views here.
 
@@ -183,6 +196,101 @@ def uploadCarImage(request):
     return Response("Image(s) uploaded")
 
 
+class NearbyCarsAPIView(generics.ListAPIView):
+    """Get cars available for rent near the user's location"""
+
+    serializer_class = CarSearchSerializer
+    permission_classes = [permissions.AllowAny]  # Make it public for easier testing
+
+    def get_queryset(self):
+        # Get query parameters with error handling
+        user_lat = self.request.query_params.get('latitude')
+        user_lng = self.request.query_params.get('longitude')
+        
+        # Handle radius parameter with error handling
+        try:
+            radius_km = float(self.request.query_params.get('radius', 10))
+        except (ValueError, TypeError):
+            radius_km = 10  # Default 10km if invalid
+        
+        city = self.request.query_params.get('city')
+        car_type = self.request.query_params.get('car_type')
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+
+        # Start with available cars
+        queryset = Car.objects.filter(
+            is_available=True,
+            published_status=True,
+            advert_type=Car.AdvertType.FOR_RENT
+        )
+
+        # Apply filters with error handling
+        if car_type:
+            queryset = queryset.filter(car_type=car_type)
+
+        if min_price:
+            try:
+                min_price = float(min_price)
+                queryset = queryset.filter(price__gte=min_price)
+            except (ValueError, TypeError):
+                pass  # Skip invalid min_price
+
+        if max_price:
+            try:
+                max_price = float(max_price)
+                queryset = queryset.filter(price__lte=max_price)
+            except (ValueError, TypeError):
+                pass  # Skip invalid max_price
+
+        # Location-based filtering
+        if user_lat and user_lng:
+            try:
+                user_lat = float(user_lat)
+                user_lng = float(user_lng)
+
+                # Calculate distance for each car
+                cars_with_distance = []
+                for car in queryset.filter(latitude__isnull=False, longitude__isnull=False):
+                    if car.latitude and car.longitude:
+                        distance = self.calculate_distance(
+                            user_lat, user_lng,
+                            float(car.latitude), float(car.longitude)
+                        )
+                        if distance <= radius_km:
+                            car.distance = round(distance, 2)
+                            cars_with_distance.append(car)
+
+                # Sort by distance
+                cars_with_distance.sort(key=lambda x: x.distance)
+                return cars_with_distance
+
+            except (ValueError, TypeError):
+                pass
+
+        # Fallback to city-based search
+        if city:
+            queryset = queryset.filter(city__icontains=city)
+
+        # Add default distance for non-location cars
+        for car in queryset:
+            car.distance = None
+
+        return queryset
+
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        """Calculate distance between two points using Haversine formula"""
+        R = 6371  # Earth's radius in kilometers
+
+        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        c = 2 * math.asin(math.sqrt(a))
+
+        return R * c
+
 class CarSearchAPIView(APIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = CarCreateSerializer
@@ -242,3 +350,182 @@ class CarSearchAPIView(APIView):
         serializer = CarSerializer(queryset, many=True)
 
         return Response(serializer.data)
+
+class AdvancedCarSearchAPIView(generics.ListAPIView):
+    """Advanced car search with multiple filters and location support"""
+    
+    serializer_class = CarSearchSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = Car.objects.filter(
+            is_available=True,
+            published_status=True,
+            advert_type=Car.AdvertType.FOR_RENT
+        )
+        
+        # Text search
+        search_query = self.request.query_params.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(city__icontains=search_query)
+            )
+        
+        # Car type filter
+        car_type = self.request.query_params.get('car_type')
+        if car_type:
+            queryset = queryset.filter(car_type=car_type)
+        
+        # Price range filter with error handling
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        
+        if min_price:
+            try:
+                min_price = float(min_price)
+                queryset = queryset.filter(price__gte=min_price)
+            except (ValueError, TypeError):
+                pass  # Skip invalid min_price
+        
+        if max_price:
+            try:
+                max_price = float(max_price)
+                queryset = queryset.filter(price__lte=max_price)
+            except (ValueError, TypeError):
+                pass  # Skip invalid max_price
+        
+        # Seats filter with error handling
+        min_seats = self.request.query_params.get('min_seats')
+        if min_seats:
+            try:
+                min_seats = int(min_seats)
+                queryset = queryset.filter(total_seats__gte=min_seats)
+            except (ValueError, TypeError):
+                pass  # Skip invalid min_seats
+        
+        # Location filter
+        city = self.request.query_params.get('city')
+        if city:
+            queryset = queryset.filter(city__icontains=city)
+        
+        # Date availability filter with error handling
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        
+        if start_date and end_date:
+            try:
+                from datetime import datetime
+                # Parse dates with error handling
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                
+                # Check for booking conflicts
+                conflicting_bookings = Booking.objects.filter(
+                    car__in=queryset,
+                    start_date__lte=end_date,
+                    end_date__gte=start_date,
+                    status__in=[BookingStatus.PENDING, BookingStatus.APPROVED]
+                ).values_list('car_id', flat=True)
+                
+                queryset = queryset.exclude(id__in=conflicting_bookings)
+                
+            except (ValueError, TypeError):
+                pass  # Skip invalid dates
+        
+        # Add distance if user location provided
+        user_lat = self.request.query_params.get('latitude')
+        user_lng = self.request.query_params.get('longitude')
+        
+        if user_lat and user_lng:
+            try:
+                user_lat = float(user_lat)
+                user_lng = float(user_lng)
+                
+                for car in queryset.filter(latitude__isnull=False, longitude__isnull=False):
+                    if car.latitude and car.longitude:
+                        distance = self.calculate_distance(
+                            user_lat, user_lng, 
+                            float(car.latitude), float(car.longitude)
+                        )
+                        car.distance = round(distance, 2)
+                    else:
+                        car.distance = None
+            except (ValueError, TypeError):
+                pass
+        
+        return queryset
+    
+    def calculate_distance(self, lat1, lon1, lat2, lon2):
+        """Calculate distance between two points using Haversine formula"""
+        R = 6371  # Earth's radius in kilometers
+        
+        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+        c = 2 * math.asin(math.sqrt(a))
+        
+        return R * c
+
+class UpdateCarLocationAPIView(generics.UpdateAPIView):
+    """Update car's current location"""
+
+    serializer_class = CarLocationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        return Car.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        """Override to provide better error handling"""
+        try:
+            return super().get_object()
+        except Car.DoesNotExist:
+            raise CarNotFound
+
+    def update(self, request, *args, **kwargs):
+        try:
+            car = self.get_object()
+        except Car.DoesNotExist:
+            return Response({
+                'error': 'Car not found',
+                'message': 'The car with the specified slug does not exist or does not belong to you',
+                'slug': kwargs.get('slug', 'unknown')
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Update location fields
+        serializer = self.get_serializer(car, data=request.data, partial=True)
+        
+        if not serializer.is_valid():
+            return Response({
+                'error': 'Validation failed',
+                'message': 'Invalid data provided for location update',
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            car = serializer.save()
+            
+            return Response({
+                'message': 'Car location updated successfully',
+                'car_id': car.id,
+                'slug': car.slug,
+                'title': car.title,
+                'latitude': car.latitude,
+                'longitude': car.longitude,
+                'current_location': car.current_location,
+                'city': car.city,
+                'state': car.state,
+                'address': car.address
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'Update failed',
+                'message': 'An error occurred while updating the car location',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -6,7 +6,100 @@ from django.utils import timezone
 from django.utils.translation import \
     gettext_lazy as _  # #for translation of all our strings
 
+from apps.common.models import TimeStampedUUIDModel
 from .managers import CustomUserManager
+
+
+class UserLocation(TimeStampedUUIDModel):
+    """Model to track user's current location for location-based car discovery"""
+    
+    user = models.OneToOneField(
+        'users.User',  # Use string reference to avoid circular import
+        on_delete=models.CASCADE,
+        related_name='location',
+        verbose_name=_("User")
+    )
+    
+    latitude = models.DecimalField(
+        verbose_name=_("Latitude"),
+        max_digits=9,
+        decimal_places=6,
+        help_text="User's current latitude coordinate"
+    )
+    
+    longitude = models.DecimalField(
+        verbose_name=_("Longitude"),
+        max_digits=9,
+        decimal_places=6,
+        help_text="User's current longitude coordinate"
+    )
+    
+    address = models.CharField(
+        verbose_name=_("Address"),
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="User's current address"
+    )
+    
+    city = models.CharField(
+        verbose_name=_("City"),
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="User's current city"
+    )
+    
+    state = models.CharField(
+        verbose_name=_("State/Province"),
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="User's current state or province"
+    )
+    
+    country = models.CharField(
+        verbose_name=_("Country"),
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="User's current country"
+    )
+    
+    last_updated = models.DateTimeField(
+        verbose_name=_("Last Updated"),
+        auto_now=True,
+        help_text="When the location was last updated"
+    )
+    
+    is_active = models.BooleanField(
+        verbose_name=_("Location Active"),
+        default=True,
+        help_text="Whether this location is currently active"
+    )
+    
+    class Meta:
+        verbose_name = "User Location"
+        verbose_name_plural = "User Locations"
+        indexes = [
+            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['city', 'state']),
+            models.Index(fields=['is_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username}'s location in {self.city or 'Unknown'}"
+    
+    @property
+    def coordinates(self):
+        """Return coordinates as a tuple"""
+        return (float(self.latitude), float(self.longitude))
+    
+    @property
+    def full_address(self):
+        """Return full address string"""
+        parts = [self.address, self.city, self.state, self.country]
+        return ", ".join([part for part in parts if part])
 
 
 class User(AbstractBaseUser, PermissionsMixin):

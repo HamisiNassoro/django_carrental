@@ -1,7 +1,8 @@
 from .base import *
 
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # Temporarily use console backend
+# EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"  # Temporarily commented out
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_USE_TLS = True
 EMAIL_PORT = env("EMAIL_PORT")

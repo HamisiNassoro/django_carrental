@@ -129,7 +129,51 @@ class Car(TimeStampedUUIDModel):
         verbose_name=_("Published Status"), default=False
     )
     views = models.IntegerField(verbose_name=_("Total Views"), default=0)
-    location = models.CharField(max_length=255, default="0,0", help_text="Location coordinates (latitude,longitude)")
+    
+    # Enhanced location fields for geolocation
+    latitude = models.DecimalField(
+        verbose_name=_("Latitude"), 
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True,
+        help_text="Car's latitude coordinate"
+    )
+    longitude = models.DecimalField(
+        verbose_name=_("Longitude"), 
+        max_digits=9, 
+        decimal_places=6, 
+        null=True, 
+        blank=True,
+        help_text="Car's longitude coordinate"
+    )
+    
+    # Availability and status fields
+    is_available = models.BooleanField(
+        verbose_name=_("Available for Rent"), 
+        default=True,
+        help_text="Whether the car is currently available for booking"
+    )
+    current_location = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="Current location description (e.g., 'Nairobi CBD, Kenya')"
+    )
+    
+    # Additional location details
+    state = models.CharField(
+        verbose_name=_("State/Province"), 
+        max_length=100, 
+        blank=True, 
+        null=True
+    )
+    address = models.CharField(
+        verbose_name=_("Full Address"), 
+        max_length=500, 
+        blank=True, 
+        null=True
+    )
 
     objects = models.Manager()
     published = CarPublishedManager()
@@ -140,6 +184,13 @@ class Car(TimeStampedUUIDModel):
     class Meta:
         verbose_name = "Car"
         verbose_name_plural = "Cars"
+        indexes = [
+            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['city', 'state']),
+            models.Index(fields=['is_available', 'published_status']),
+            models.Index(fields=['price', 'is_available']),
+            models.Index(fields=['car_type', 'is_available']),
+        ]
 
     def save(self, *args, **kwargs):
         self.title = str.title(self.title)  # title be title cased
