@@ -53,12 +53,9 @@ services:
 
   - type: pserv
     name: django-car-rental-db
-    env: postgresql
     plan: free
-    ipAllowList: []
 
   - type: redis
     name: django-car-rental-redis
     plan: free
-    ipAllowList: []
 
