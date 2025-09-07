@@ -2,6 +2,7 @@ from django_countries.serializer_fields import CountryField
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from django_countries import countries
+from django.contrib.gis.geos import Point
 
 from .models import Car, CarViews
 from apps.profiles.serializers import ProfileSerializer
@@ -46,8 +47,7 @@ class CarSerializer(serializers.ModelSerializer):
             "photo4",
             "published_status",
             "views",
-            "latitude",
-            "longitude",
+            "location",
             "current_location",
             "is_available",
             "created_at",
@@ -121,8 +121,7 @@ class CarCreateSerializer(serializers.ModelSerializer):
             "photo3",
             "photo4",
             "published_status",
-            "latitude",
-            "longitude",
+            "location",
             "current_location",
             "is_available"
         ]
@@ -139,15 +138,12 @@ class CarCreateSerializer(serializers.ModelSerializer):
         if total_seats and total_seats < 0:
             raise serializers.ValidationError("Total seats cannot be negative")
         
-        # Validate coordinates if provided
-        latitude = attrs.get('latitude')
-        longitude = attrs.get('longitude')
-        
-        if latitude is not None and (latitude < -90 or latitude > 90):
-            raise serializers.ValidationError("Latitude must be between -90 and 90")
-        
-        if longitude is not None and (longitude < -180 or longitude > 180):
-            raise serializers.ValidationError("Longitude must be between -180 and 180")
+        # Validate location if provided
+        location = attrs.get('location')
+        if location:
+            if not isinstance(location, Point):
+                raise serializers.ValidationError("Location must be a valid Point object")
+            # PointField automatically validates coordinates
         
         return attrs
     
@@ -160,17 +156,22 @@ class CarCreateSerializer(serializers.ModelSerializer):
 class CarLocationSerializer(serializers.ModelSerializer):
     """Serializer for updating car location"""
     
+    latitude = serializers.FloatField(write_only=True, required=False)
+    longitude = serializers.FloatField(write_only=True, required=False)
+    
     class Meta:
         model = Car
         fields = [
             "latitude",
             "longitude",
+            "location",
             "current_location",
             "address",
             "city",
             "state",
             "country"
         ]
+        read_only_fields = ["location"]
     
     def validate(self, attrs):
         latitude = attrs.get('latitude')
@@ -182,15 +183,26 @@ class CarLocationSerializer(serializers.ModelSerializer):
         if longitude is not None and (longitude < -180 or longitude > 180):
             raise serializers.ValidationError("Longitude must be between -180 and 180")
         
+        # Create Point object from latitude and longitude
+        if latitude is not None and longitude is not None:
+            attrs['location'] = Point(longitude, latitude)  # Point takes (x, y) = (longitude, latitude)
+        
         return attrs
 
 class CarSearchSerializer(CarSerializer):
     """Serializer for car search results with distance calculation"""
     
-    distance = serializers.FloatField(read_only=True, help_text="Distance in kilometers from user location")
+    distance = serializers.SerializerMethodField(read_only=True, help_text="Distance in kilometers from user location")
     
     class Meta(CarSerializer.Meta):
         fields = CarSerializer.Meta.fields + ["distance"]
+    
+    def get_distance(self, obj):
+        """Convert PostGIS Distance object to float"""
+        if hasattr(obj, 'distance') and obj.distance:
+            # PostGIS Distance object has a 'km' attribute
+            return float(obj.distance.km)
+        return None
 
 class CarViewSerializer(serializers.ModelSerializer):
     """Serializer for car views"""

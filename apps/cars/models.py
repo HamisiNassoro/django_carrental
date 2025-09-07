@@ -3,7 +3,7 @@ import string
 
 from autoslug import AutoSlugField
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.contrib.gis.db import models
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
@@ -130,22 +130,12 @@ class Car(TimeStampedUUIDModel):
     )
     views = models.IntegerField(verbose_name=_("Total Views"), default=0)
     
-    # Enhanced location fields for geolocation
-    latitude = models.DecimalField(
-        verbose_name=_("Latitude"), 
-        max_digits=9, 
-        decimal_places=6, 
+    # Enhanced location fields for geolocation using PostGIS
+    location = models.PointField(
+        verbose_name=_("Location"), 
         null=True, 
         blank=True,
-        help_text="Car's latitude coordinate"
-    )
-    longitude = models.DecimalField(
-        verbose_name=_("Longitude"), 
-        max_digits=9, 
-        decimal_places=6, 
-        null=True, 
-        blank=True,
-        help_text="Car's longitude coordinate"
+        help_text="Car's geographical location (latitude, longitude)"
     )
     
     # Availability and status fields
@@ -185,7 +175,7 @@ class Car(TimeStampedUUIDModel):
         verbose_name = "Car"
         verbose_name_plural = "Cars"
         indexes = [
-            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['location']),
             models.Index(fields=['city', 'state']),
             models.Index(fields=['is_available', 'published_status']),
             models.Index(fields=['price', 'is_available']),

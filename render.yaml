@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: django-car-rental-api
+    env: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py migrate
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn car_rental.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: car_rental.settings.production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: django-car-rental-api.onrender.com
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: django-car-rental-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: django-car-rental-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: django-car-rental-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: django-car-rental-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: django-car-rental-db
+          property: port
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_HOST_USER
+        value: your-email@gmail.com
+      - key: EMAIL_HOST_PASSWORD
+        value: your-app-password
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: django-car-rental-redis
+          property: connectionString
+
+  - type: pserv
+    name: django-car-rental-db
+    env: postgresql
+    plan: free
+
+  - type: redis
+    name: django-car-rental-redis
+    plan: free
+

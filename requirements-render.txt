@@ -1,0 +1,48 @@
+# Core Django
+Django>=4.2.0
+djangorestframework>=3.15.0
+django-environ==0.7.0
+
+# Database & GIS
+psycopg2-binary>=2.9.10
+django-geojson>=3.2.0
+
+# API & Authentication
+djoser>=2.2.0
+djangorestframework-simplejwt>=5.3.0
+PyJWT==2.1.0
+
+# Filtering & Search
+django-filter==21.1
+django-autoslug==1.9.8
+django-countries==7.2.1
+
+# Media & Files
+Pillow>=11.0.0
+django-phonenumber-field==5.2.0
+phonenumbers==8.12.33
+
+# Production Server
+gunicorn>=21.0.0
+whitenoise>=6.0.0
+
+# Additional production dependencies
+python-decouple>=3.8
+
+# CORS (if needed)
+django-cors-headers>=4.0.0
+
+# Background Tasks (optional)
+redis>=4.0.0
+celery>=5.3.0
+
+# Development & Testing (optional for production)
+pytest-django==4.4.0
+pytest-factoryboy==2.1.0
+Faker==8.9.1
+pytest-cov==2.12.1
+
+# Code Quality (optional for production)
+flake8==3.9.2
+black>=23.0.0
+isort>=5.12.0

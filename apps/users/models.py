@@ -1,7 +1,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.db import models
+from django.contrib.gis.db import models
 from django.utils import timezone
 from django.utils.translation import \
     gettext_lazy as _  # #for translation of all our strings
@@ -20,18 +20,11 @@ class UserLocation(TimeStampedUUIDModel):
         verbose_name=_("User")
     )
     
-    latitude = models.DecimalField(
-        verbose_name=_("Latitude"),
-        max_digits=9,
-        decimal_places=6,
-        help_text="User's current latitude coordinate"
-    )
-    
-    longitude = models.DecimalField(
-        verbose_name=_("Longitude"),
-        max_digits=9,
-        decimal_places=6,
-        help_text="User's current longitude coordinate"
+    location = models.PointField(
+        verbose_name=_("Location"),
+        null=True,
+        blank=True,
+        help_text="User's current geographical location (latitude, longitude)"
     )
     
     address = models.CharField(
@@ -82,7 +75,7 @@ class UserLocation(TimeStampedUUIDModel):
         verbose_name = "User Location"
         verbose_name_plural = "User Locations"
         indexes = [
-            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['location']),
             models.Index(fields=['city', 'state']),
             models.Index(fields=['is_active']),
         ]
@@ -93,7 +86,9 @@ class UserLocation(TimeStampedUUIDModel):
     @property
     def coordinates(self):
         """Return coordinates as a tuple"""
-        return (float(self.latitude), float(self.longitude))
+        if self.location:
+            return (self.location.y, self.location.x)  # PointField returns (longitude, latitude)
+        return (None, None)
     
     @property
     def full_address(self):
