@@ -7,9 +7,9 @@ from rest_framework import filters, generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from django.contrib.gis.geos import Point  # Removed - causes GDAL dependency
-# from django.contrib.gis.db.models.functions import Distance  # Removed
-# from django.contrib.gis.measure import D  # Removed
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
 from django.core.cache import cache
 import math
 
@@ -243,27 +243,25 @@ class NearbyCarsAPIView(generics.ListAPIView):
             except (ValueError, TypeError):
                 pass  # Skip invalid max_price
 
-        # Location-based filtering
+        # Location-based filtering using PostGIS
         if user_lat and user_lng:
             try:
                 user_lat = float(user_lat)
                 user_lng = float(user_lng)
+                
+                # Create user location point
+                user_location = Point(user_lng, user_lat, srid=4326)
+                
+                # Filter cars within radius using PostGIS Distance function
+                queryset = queryset.filter(
+                    location__isnull=False
+                ).annotate(
+                    distance=Distance('location', user_location)
+                ).filter(
+                    distance__lte=D(km=radius_km)
+                ).order_by('distance')
 
-                # Calculate distance for each car
-                cars_with_distance = []
-                for car in queryset.filter(latitude__isnull=False, longitude__isnull=False):
-                    if car.latitude and car.longitude:
-                        distance = self.calculate_distance(
-                            user_lat, user_lng,
-                            float(car.latitude), float(car.longitude)
-                        )
-                        if distance <= radius_km:
-                            car.distance = round(distance, 2)
-                            cars_with_distance.append(car)
-
-                # Sort by distance
-                cars_with_distance.sort(key=lambda x: x.distance)
-                return cars_with_distance
+                return queryset
 
             except (ValueError, TypeError):
                 pass
@@ -277,19 +275,6 @@ class NearbyCarsAPIView(generics.ListAPIView):
             car.distance = None
 
         return queryset
-
-    def calculate_distance(self, lat1, lon1, lat2, lon2):
-        """Calculate distance between two points using Haversine formula"""
-        R = 6371  # Earth's radius in kilometers
-
-        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-        c = 2 * math.asin(math.sqrt(a))
-
-        return R * c
 
 class CarSearchAPIView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -434,7 +419,7 @@ class AdvancedCarSearchAPIView(generics.ListAPIView):
             except (ValueError, TypeError):
                 pass  # Skip invalid dates
         
-        # Add distance if user location provided
+        # Add distance if user location provided using PostGIS
         user_lat = self.request.query_params.get('latitude')
         user_lng = self.request.query_params.get('longitude')
         
@@ -443,32 +428,20 @@ class AdvancedCarSearchAPIView(generics.ListAPIView):
                 user_lat = float(user_lat)
                 user_lng = float(user_lng)
                 
-                for car in queryset.filter(latitude__isnull=False, longitude__isnull=False):
-                    if car.latitude and car.longitude:
-                        distance = self.calculate_distance(
-                            user_lat, user_lng, 
-                            float(car.latitude), float(car.longitude)
-                        )
-                        car.distance = round(distance, 2)
-                    else:
-                        car.distance = None
+                # Create user location point
+                user_location = Point(user_lng, user_lat, srid=4326)
+                
+                # Annotate queryset with distance using PostGIS
+                queryset = queryset.filter(
+                    location__isnull=False
+                ).annotate(
+                    distance=Distance('location', user_location)
+                ).order_by('distance')
+                
             except (ValueError, TypeError):
                 pass
         
         return queryset
-    
-    def calculate_distance(self, lat1, lon1, lat2, lon2):
-        """Calculate distance between two points using Haversine formula"""
-        R = 6371  # Earth's radius in kilometers
-        
-        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        
-        a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-        c = 2 * math.asin(math.sqrt(a))
-        
-        return R * c
 
 class UpdateCarLocationAPIView(generics.UpdateAPIView):
     """Update car's current location"""

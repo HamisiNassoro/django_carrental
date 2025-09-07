@@ -4,6 +4,7 @@ from djoser.serializers import UserCreateSerializer
 from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.gis.geos import Point
 
 from .models import UserLocation
 
@@ -58,12 +59,16 @@ class CreateUserSerializer(UserCreateSerializer):
 class UserLocationSerializer(serializers.ModelSerializer):
     """Serializer for user location data"""
     
+    latitude = serializers.FloatField(write_only=True, required=False)
+    longitude = serializers.FloatField(write_only=True, required=False)
+    
     class Meta:
         model = UserLocation
         fields = [
             "id",
             "latitude",
             "longitude",
+            "location",
             "address",
             "city",
             "state",
@@ -71,7 +76,7 @@ class UserLocationSerializer(serializers.ModelSerializer):
             "last_updated",
             "is_active"
         ]
-        read_only_fields = ["id", "last_updated"]
+        read_only_fields = ["id", "last_updated", "location"]
     
     def validate(self, attrs):
         latitude = attrs.get('latitude')
@@ -82,22 +87,31 @@ class UserLocationSerializer(serializers.ModelSerializer):
         
         if longitude is not None and (longitude < -180 or longitude > 180):
             raise serializers.ValidationError("Longitude must be between -180 and 180")
+        
+        # Create Point object from latitude and longitude
+        if latitude is not None and longitude is not None:
+            attrs['location'] = Point(longitude, latitude)  # Point takes (x, y) = (longitude, latitude)
         
         return attrs
 
 class UpdateUserLocationSerializer(serializers.ModelSerializer):
     """Serializer for updating user location"""
     
+    latitude = serializers.FloatField(write_only=True, required=False)
+    longitude = serializers.FloatField(write_only=True, required=False)
+    
     class Meta:
         model = UserLocation
         fields = [
             "latitude",
             "longitude",
+            "location",
             "address",
             "city",
             "state",
             "country"
         ]
+        read_only_fields = ["location"]
     
     def validate(self, attrs):
         latitude = attrs.get('latitude')
@@ -108,6 +122,10 @@ class UpdateUserLocationSerializer(serializers.ModelSerializer):
         
         if longitude is not None and (longitude < -180 or longitude > 180):
             raise serializers.ValidationError("Longitude must be between -180 and 180")
+        
+        # Create Point object from latitude and longitude
+        if latitude is not None and longitude is not None:
+            attrs['location'] = Point(longitude, latitude)  # Point takes (x, y) = (longitude, latitude)
         
         return attrs
 
@@ -116,6 +134,8 @@ class UserLocationResponseSerializer(serializers.ModelSerializer):
     
     coordinates = serializers.SerializerMethodField()
     full_address = serializers.SerializerMethodField()
+    latitude = serializers.SerializerMethodField()
+    longitude = serializers.SerializerMethodField()
     
     class Meta:
         model = UserLocation
@@ -123,6 +143,7 @@ class UserLocationResponseSerializer(serializers.ModelSerializer):
             "id",
             "latitude",
             "longitude",
+            "location",
             "coordinates",
             "address",
             "city",
@@ -138,3 +159,13 @@ class UserLocationResponseSerializer(serializers.ModelSerializer):
     
     def get_full_address(self, obj):
         return obj.full_address
+    
+    def get_latitude(self, obj):
+        if obj.location:
+            return obj.location.y  # PointField returns (longitude, latitude)
+        return None
+    
+    def get_longitude(self, obj):
+        if obj.location:
+            return obj.location.x  # PointField returns (longitude, latitude)
+        return None

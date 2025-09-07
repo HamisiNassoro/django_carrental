@@ -13,10 +13,15 @@ DOMAIN = env("DOMAIN")
 SITE_NAME = "Car Hire"
 
 
+# Use PostgreSQL with PostGIS for development (recommended for location features)
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": env("POSTGRES_DB", default="carrental"),
+        "USER": env("POSTGRES_USER", default="postgres"),
+        "PASSWORD": env("POSTGRES_PASSWORD", default=""),
+        "HOST": env("PG_HOST", default="localhost"),
+        "PORT": env("PG_PORT", default="5432"),
     }
 }
 
