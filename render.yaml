@@ -1,3 +1,8 @@
+databases:
+  - name: django-car-rental-db
+    plan: free
+    ipAllowList: []
+
 services:
   - type: web
     name: django-car-rental-api
@@ -51,11 +56,10 @@ services:
           name: django-car-rental-redis
           property: connectionString
 
-  - type: pserv
-    name: django-car-rental-db
-    plan: free
-
   - type: redis
     name: django-car-rental-redis
     plan: free
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: Allow all IPs
 
