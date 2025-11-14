@@ -6,13 +6,10 @@ databases:
 services:
   - type: web
     name: django-car-rental-api
-    env: python
+    env: docker
     plan: free
-    buildCommand: |
-      pip install -r requirements-render.txt
-      python manage.py migrate
-      python manage.py collectstatic --noinput
-    startCommand: gunicorn car_rental.wsgi:application --bind 0.0.0.0:$PORT
+    dockerfilePath: Dockerfile.render
+    startCommand: ./render-entrypoint.sh
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: car_rental.settings.render

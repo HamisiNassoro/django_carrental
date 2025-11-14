@@ -12,27 +12,34 @@
 
 Make sure these files are in your repository root:
 - `render.yaml` ✅
+- `Dockerfile.render` ✅
+- `render-entrypoint.sh` ✅
 - `requirements-render.txt` ✅
-- `build.sh` ✅
 - `car_rental/settings/render.py` ✅
 
 ### 2. **Deploy to Render**
 
-#### Option A: Using render.yaml (Recommended)
+#### Option A: Using render.yaml + Docker (Recommended)
 1. Go to [Render Dashboard](https://dashboard.render.com)
 2. Click "New +" → "Blueprint"
 3. Connect your GitHub repository
-4. Render will automatically detect `render.yaml` and deploy all services
+4. Render will automatically detect `render.yaml`, build `Dockerfile.render`, and deploy the web, Postgres, and Redis services
 
-#### Option B: Manual Setup
+#### Option B: Manual Web Service Setup
 1. Go to [Render Dashboard](https://dashboard.render.com)
 2. Click "New +" → "Web Service"
 3. Connect your GitHub repository
-4. Configure the following:
+4. Choose **Environment → Docker**
+5. Set **Dockerfile path** to `Dockerfile.render`
+6. Set **Start Command** to `./render-entrypoint.sh`
+7. Add the environment variables below (or sync them from `render.yaml`)
 
-**Build Settings:**
-- **Build Command**: `./build.sh`
-- **Start Command**: `gunicorn car_rental.wsgi:application --bind 0.0.0.0:$PORT`
+`render-entrypoint.sh` handles:
+- database availability checks
+- enabling the PostGIS extension
+- running migrations and `collectstatic`
+- creating the default admin user (optional)
+- starting Gunicorn
 
 **Environment Variables:**
 ```

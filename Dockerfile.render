@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        binutils \
+        gdal-bin \
+        libgdal-dev \
+        libproj-dev \
+        gcc \
+        build-essential \
+        postgresql-client \
+        libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-render.txt .
+RUN pip install --upgrade pip \
+    && pip install -r requirements-render.txt
+
+COPY . .
+
+RUN chmod +x render-entrypoint.sh
+
+EXPOSE 8000
+
+CMD ["./render-entrypoint.sh"]
+
