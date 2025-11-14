@@ -9,7 +9,6 @@ services:
     env: docker
     plan: free
     dockerfilePath: Dockerfile.render
-    startCommand: ./render-entrypoint.sh
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: car_rental.settings.render

@@ -31,7 +31,7 @@ Make sure these files are in your repository root:
 3. Connect your GitHub repository
 4. Choose **Environment → Docker**
 5. Set **Dockerfile path** to `Dockerfile.render`
-6. Set **Start Command** to `./render-entrypoint.sh`
+6. (No start command needed — Docker CMD already runs `render-entrypoint.sh`)
 7. Add the environment variables below (or sync them from `render.yaml`)
 
 `render-entrypoint.sh` handles:
@@ -77,32 +77,38 @@ REDIS_URL=your-redis-url
 
 ### render.yaml
 ```yaml
+databases:
+  - name: django-car-rental-db
+    plan: free
+    ipAllowList: []
+
 services:
   - type: web
     name: django-car-rental-api
-    env: python
+    env: docker
     plan: free
-    buildCommand: ./build.sh
-    startCommand: gunicorn car_rental.wsgi:application --bind 0.0.0.0:$PORT
+    dockerfilePath: Dockerfile.render
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: car_rental.settings.render
       # ... other environment variables
+
+  - type: redis
+    name: django-car-rental-redis
+    plan: free
 ```
 
-### build.sh
+### render-entrypoint.sh
 ```bash
 #!/usr/bin/env bash
-# Install dependencies
-pip install -r requirements-render.txt
+set -o errexit
+set -o pipefail
 
-# Run migrations
-python manage.py migrate
-
-# Collect static files
+python manage.py shell -c "from django.db import connection; cursor = connection.cursor(); cursor.execute('CREATE EXTENSION IF NOT EXISTS postgis');"
+python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
-# Create superuser
+# Create default admin user
 python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -112,10 +118,9 @@ if not User.objects.filter(email='admin@admin.com').exists():
         username='admin',
         password='admin123'
     )
-    print('Superuser created')
-else:
-    print('Superuser already exists')
 "
+
+exec gunicorn car_rental.wsgi:application --bind 0.0.0.0:${PORT:-8000}
 ```
 
 ## 🌐 Environment Variables
