@@ -17,9 +17,40 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
+from django.http import JsonResponse
+
+
+def api_root_v1(request):
+    """API root endpoint that returns JSON with all available endpoints"""
+    return JsonResponse({
+        "name": "Car Rental API",
+        "version": "v1",
+        "description": "Car Rental backend API for managing cars, bookings, and users",
+        "links": {
+            "authentication": request.build_absolute_uri("/api/v1/auth/"),
+            "cars": request.build_absolute_uri("/api/cars/all/"),
+            "bookings": request.build_absolute_uri("/api/bookings/"),
+            "users": request.build_absolute_uri("/api/users/"),
+            "profiles": request.build_absolute_uri("/api/profile/"),
+            "ratings": request.build_absolute_uri("/api/ratings/"),
+            "enquiries": request.build_absolute_uri("/api/enquiries/"),
+            "admin": request.build_absolute_uri("/admin/"),
+        }
+    })
+
 
 urlpatterns = [
+    # Landing page
+    path('', TemplateView.as_view(template_name='api_index.html'), name='api_landing'),
+    
+    # API root endpoint (JSON)
+    path('api/v1/', api_root_v1, name='api_root_v1'),
+    
+    # Admin
     path('admin/', admin.site.urls),
+    
+    # API endpoints
     path("api/v1/auth/", include("djoser.urls")),
     path("api/v1/auth/", include("djoser.urls.jwt")),
     path("api/profile/", include("apps.profiles.urls")),
