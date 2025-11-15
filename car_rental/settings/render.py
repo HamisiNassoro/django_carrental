@@ -7,7 +7,14 @@ DEBUG = False
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+# ALLOWED_HOSTS configuration for Render
+# Render assigns dynamic hostnames with random suffixes (e.g., django-car-rental-api-bf1w.onrender.com)
+# We'll use middleware to dynamically allow all .onrender.com subdomains
+allowed_hosts = os.environ.get('ALLOWED_HOSTS', '').split(',')
+# Filter out empty strings from split
+allowed_hosts = [host.strip() for host in allowed_hosts if host.strip()]
+# Start with an empty list - middleware will add hosts dynamically
+ALLOWED_HOSTS = allowed_hosts
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -29,6 +36,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration for static files
 MIDDLEWARE = [
+    'apps.common.middleware.RenderHostMiddleware',  # Must be first to handle dynamic Render hosts
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this line
     'django.contrib.sessions.middleware.SessionMiddleware',
