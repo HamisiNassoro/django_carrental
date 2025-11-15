@@ -63,11 +63,14 @@ services:
 
   - type: web
     name: django-car-rental-frontend
-    plan: free
     env: static
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: client/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://django-car-rental-api-bf1w.onrender.com
+        fromService:
+          type: web
+          name: django-car-rental-api
+          property: host
+        transform: https://${host}
 
