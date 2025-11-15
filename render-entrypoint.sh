@@ -20,8 +20,13 @@ if not User.objects.filter(email='admin@admin.com').exists():
     User.objects.create_superuser(
         email='admin@admin.com',
         username='admin',
-        password='admin123'
+        password='admin123',
+        first_name='Admin',
+        last_name='User'
     )
+    print('Superuser created')
+else:
+    print('Superuser already exists')
 "
 
 exec gunicorn car_rental.wsgi:application --bind 0.0.0.0:${PORT:-8000}
