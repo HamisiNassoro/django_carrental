@@ -226,6 +226,10 @@ logger = logging.getLogger(__name__)
 
 LOG_LEVEL = "INFO"
 
+# Ensure logs directory exists
+logs_dir = BASE_DIR / "logs"
+logs_dir.mkdir(exist_ok=True)
+
 logging.config.dictConfig(
     {
         "version": 1,
@@ -246,7 +250,7 @@ logging.config.dictConfig(
                 "level": "INFO",
                 "class": "logging.FileHandler",
                 "formatter": "file",
-                "filename": "logs/car_rental.log",
+                "filename": str(logs_dir / "car_rental.log"),
             },
             "django.server": DEFAULT_LOGGING["handlers"]["django.server"],
         },
