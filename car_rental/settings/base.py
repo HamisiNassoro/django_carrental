@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from datetime import timedelta  # configure simple_jwt and djoser
 from pathlib import Path
+import os
 
 import environ
 
@@ -168,6 +169,9 @@ REST_FRAMEWORK = {
 }
 
 ### configuring SIMPLE_JWT
+# Use SIGNING_KEY if set, otherwise fall back to SECRET_KEY
+_signing_key = os.environ.get("SIGNING_KEY", SECRET_KEY)
+
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": (
         "Bearer",
@@ -175,7 +179,8 @@ SIMPLE_JWT = {
     ),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "SIGNING_KEY": env("SIGNING_KEY"),
+    "SIGNING_KEY": _signing_key,
+    # "SIGNING_KEY": env("SIGNING_KEY"),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
 }
