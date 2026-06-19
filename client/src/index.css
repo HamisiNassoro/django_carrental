@@ -641,6 +641,11 @@ a.btn.btn-primary:active {
 	color: #1a1a2e;
 }
 
+.booking-summary {
+	background: #f8f9ff;
+	border: 1px solid #e9ecef;
+}
+
 @media (max-width: 768px) {
 	.wizard-steps {
 		grid-template-columns: repeat(2, 1fr);

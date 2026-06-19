@@ -36,9 +36,11 @@ const CarDetailPage = () => {
     (state) => state.cars
   );
   const { user } = useSelector((state) => state.auth);
-  const { isLoading: bookingLoading, isSuccess: bookingSuccess } = useSelector(
-    (state) => state.bookings
-  );
+  const {
+    isLoading: bookingLoading,
+    isError: bookingError,
+    message: bookingMessage,
+  } = useSelector((state) => state.bookings);
 
   const dispatch = useDispatch();
   const [selectedImage, setSelectedImage] = useState(0);
@@ -48,6 +50,13 @@ const CarDetailPage = () => {
     end_date: "",
     notes: "",
   });
+
+  const isOwnCar =
+    user &&
+    car &&
+    (car.owner_id === user.id ||
+      (car.user &&
+        String(car.user).toLowerCase() === String(user.username).toLowerCase()));
 
   useEffect(() => {
     if (slug) {
@@ -62,13 +71,11 @@ const CarDetailPage = () => {
   }, [isError, message]);
 
   useEffect(() => {
-    if (bookingSuccess) {
-      toast.success("Booking request submitted!");
-      setShowBookingModal(false);
+    if (bookingError && bookingMessage) {
+      toast.error(bookingMessage);
       dispatch(resetBookings());
-      navigate("/my-bookings");
     }
-  }, [bookingSuccess, dispatch, navigate]);
+  }, [bookingError, bookingMessage, dispatch]);
 
   const handleBookClick = () => {
     if (!user) {
@@ -76,16 +83,33 @@ const CarDetailPage = () => {
       navigate("/login", { state: { from: `/car/${slug}` } });
       return;
     }
+    if (isOwnCar) {
+      toast.info("This is your own listing — you cannot book it");
+      return;
+    }
+    dispatch(resetBookings());
     setShowBookingModal(true);
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
+
     if (!bookingForm.start_date || !bookingForm.end_date) {
       toast.error("Please select start and end dates");
       return;
     }
-    dispatch(
+
+    if (bookingForm.end_date < bookingForm.start_date) {
+      toast.error("End date must be on or after start date");
+      return;
+    }
+
+    if (isOwnCar) {
+      toast.error("You cannot book your own car");
+      return;
+    }
+
+    const result = await dispatch(
       createBooking({
         car: slug,
         start_date: bookingForm.start_date,
@@ -93,7 +117,28 @@ const CarDetailPage = () => {
         notes: bookingForm.notes,
       })
     );
+
+    if (createBooking.fulfilled.match(result)) {
+      toast.success("Booking request submitted!");
+      setShowBookingModal(false);
+      setBookingForm({ start_date: "", end_date: "", notes: "" });
+      dispatch(resetBookings());
+      navigate("/my-bookings");
+    }
   };
+
+  const bookingDays =
+    bookingForm.start_date && bookingForm.end_date
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(bookingForm.end_date) - new Date(bookingForm.start_date)) /
+              (1000 * 60 * 60 * 24)
+          ) + 1
+        )
+      : 0;
+
+  const estimatedTotal = bookingDays * Number(car?.price || 0);
 
   if (isLoading) {
     return <Spinner />;
@@ -224,12 +269,20 @@ const CarDetailPage = () => {
               <Button
                 variant="primary"
                 size="lg"
-                className="w-100 d-flex align-items-center justify-content-center gap-2"
+                className={`w-100 d-flex align-items-center justify-content-center gap-2 ${
+                  isOwnCar ? "" : "btn-accent"
+                }`}
                 onClick={handleBookClick}
+                disabled={isOwnCar}
               >
                 <FaArrowRight />
-                Book This Car
+                {isOwnCar ? "Your Listing" : "Book This Car"}
               </Button>
+              {isOwnCar && (
+                <small className="text-muted d-block mt-2 text-center">
+                  You cannot book a car you are listing
+                </small>
+              )}
             </Card.Body>
           </Card>
         </Col>
@@ -274,6 +327,17 @@ const CarDetailPage = () => {
                 required
               />
             </Form.Group>
+            {bookingDays > 0 && (
+              <div className="booking-summary p-3 rounded mb-3">
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">
+                    {bookingDays} day{bookingDays !== 1 ? "s" : ""} × $
+                    {numberWithCommas(Number(car.price))}
+                  </span>
+                  <strong>${numberWithCommas(estimatedTotal)}</strong>
+                </div>
+              </div>
+            )}
             <Form.Group>
               <Form.Label>Notes (optional)</Form.Label>
               <Form.Control
@@ -292,13 +356,19 @@ const CarDetailPage = () => {
           </Modal.Body>
           <Modal.Footer>
             <Button
+              type="button"
               variant="secondary"
               onClick={() => setShowBookingModal(false)}
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={bookingLoading}>
-              {bookingLoading ? "Submitting..." : "Request booking"}
+            <Button
+              variant="primary"
+              type="submit"
+              className="btn-accent"
+              disabled={bookingLoading}
+            >
+              {bookingLoading ? "Submitting..." : "Request Booking"}
             </Button>
           </Modal.Footer>
         </Form>

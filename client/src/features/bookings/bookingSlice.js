@@ -6,6 +6,11 @@ const formatApiError = (error) => {
   if (!data) return error.message || error.toString();
   if (typeof data === "string") return data;
   if (data.detail) return data.detail;
+  if (data.non_field_errors) {
+    return Array.isArray(data.non_field_errors)
+      ? data.non_field_errors.join(", ")
+      : String(data.non_field_errors);
+  }
   return Object.entries(data)
     .map(([field, value]) => {
       const message = Array.isArray(value) ? value.join(", ") : String(value);

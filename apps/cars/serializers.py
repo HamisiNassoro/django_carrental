@@ -22,6 +22,7 @@ def build_media_url(serializer, image_field):
 
 class CarSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+    owner_id = serializers.SerializerMethodField()
     country = CountryField(name_only=True)
     cover_photo = serializers.SerializerMethodField()
     profile_photo = serializers.SerializerMethodField()
@@ -35,6 +36,7 @@ class CarSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user",
+            "owner_id",
             "title",
             "slug",
             "ref_code",
@@ -68,6 +70,9 @@ class CarSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return obj.user.username
+
+    def get_owner_id(self, obj):
+        return obj.user_id
 
     def get_cover_photo(self, obj):
         return build_media_url(self, obj.cover_photo)
