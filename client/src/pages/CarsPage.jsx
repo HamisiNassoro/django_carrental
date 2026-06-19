@@ -1,282 +1,147 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Col, Container, Row, Button, Card } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { FaCar, FaCog, FaGasPump, FaSnowflake } from "react-icons/fa";
+import { FaCar, FaCog, FaMapMarkerAlt, FaUsers } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { getCars } from "../features/cars/carSlice";
+import { resolveCarImage } from "../utils/mediaUrl";
 
 const CarsPage = () => {
-	const { cars, isLoading, isError, message } = useSelector(
-		(state) => state.cars
-	);
+  const { cars, isLoading, isError, message } = useSelector((state) => state.cars);
+  const dispatch = useDispatch();
+  const [selectedFilter, setSelectedFilter] = useState("all");
 
-	const dispatch = useDispatch();
-	const [selectedFilter, setSelectedFilter] = useState("all");
+  useEffect(() => {
+    dispatch(getCars());
+  }, [dispatch]);
 
-	useEffect(() => {
-		if (isError) {
-			toast.error(message, { icon: "😭" });
-		}
-		dispatch(getCars());
-	}, [dispatch, isError, message]);
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+  }, [isError, message]);
 
-	// Vehicle type filters
-	const vehicleTypes = [
-		{ id: "all", label: "All vehicles", icon: <FaCar /> },
-		{ id: "sedan", label: "Sedan", icon: <FaCar /> },
-		{ id: "cabriolet", label: "Cabriolet", icon: <FaCar /> },
-		{ id: "pickup", label: "Pickup", icon: <FaCar /> },
-		{ id: "suv", label: "SUV", icon: <FaCar /> },
-		{ id: "minivan", label: "Minivan", icon: <FaCar /> }
-	];
+  const vehicleTypes = useMemo(() => {
+    const types = new Set(
+      (cars || []).map((car) => car.car_type).filter(Boolean)
+    );
+    return [
+      { id: "all", label: "All vehicles" },
+      ...Array.from(types).map((type) => ({
+        id: type.toLowerCase(),
+        label: type,
+      })),
+    ];
+  }, [cars]);
 
-	// Sample car data matching the design with real images
-	const sampleCars = [
-		{
-			id: 1,
-			brand: "Mercedes",
-			type: "Sedan",
-			price: 25,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop"
-		},
-		{
-			id: 2,
-			brand: "Mercedes",
-			type: "Sport",
-			price: 50,
-			transmission: "Manual",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop"
-		},
-		{
-			id: 3,
-			brand: "Mercedes",
-			type: "Sedan",
-			price: 45,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-		},
-		{
-			id: 4,
-			brand: "Porsche",
-			type: "SUV",
-			price: 40,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop"
-		},
-		{
-			id: 5,
-			brand: "Toyota",
-			type: "Sedan",
-			price: 35,
-			transmission: "Manual",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop"
-		},
-		{
-			id: 6,
-			brand: "Porsche",
-			type: "SUV",
-			price: 50,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-		},
-		{
-			id: 7,
-			brand: "Mercedes",
-			type: "Van",
-			price: 50,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop"
-		},
-		{
-			id: 8,
-			brand: "Toyota",
-			type: "Sport",
-			price: 60,
-			transmission: "Manual",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop"
-		},
-		{
-			id: 9,
-			brand: "Maybach",
-			type: "Sedan",
-			price: 70,
-			transmission: "Automat",
-			fuel: "PB 95",
-			airConditioner: true,
-			image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-		}
-	];
+  const filteredCars = useMemo(() => {
+    if (selectedFilter === "all") return cars || [];
+    return (cars || []).filter(
+      (car) => car.car_type?.toLowerCase() === selectedFilter
+    );
+  }, [cars, selectedFilter]);
 
-	// Filter cars based on selected filter
-	const filteredCars = selectedFilter === "all"
-		? sampleCars
-		: sampleCars.filter(car => car.type.toLowerCase() === selectedFilter);
+  if (isLoading) {
+    return <Spinner />;
+  }
 
-	if (isLoading) {
-		return <Spinner />;
-	}
+  return (
+    <Container className="py-5" style={{ marginTop: "80px" }}>
+      <Row className="mb-5">
+        <Col className="text-center">
+          <h1 className="fw-bold page-title">Available vehicles for rent</h1>
+          <p className="text-muted">
+            Browse real listings from owners near you
+          </p>
+        </Col>
+      </Row>
 
-	return (
-		<>
-			<Container className="py-5" style={{ marginTop: '80px' }}>
-				{/* Page Title */}
-				<Row className="mb-5">
-					<Col className="text-center">
-						<h1 className="fw-bold" style={{ fontSize: '2.5rem', color: '#333' }}>
-							Select a vehicle group
-						</h1>
-					</Col>
-				</Row>
+      <Row className="mb-4">
+        <Col className="d-flex justify-content-center flex-wrap gap-2">
+          {vehicleTypes.map((vehicleType) => (
+            <Button
+              key={vehicleType.id}
+              variant={
+                selectedFilter === vehicleType.id ? "primary" : "outline-secondary"
+              }
+              onClick={() => setSelectedFilter(vehicleType.id)}
+              className="filter-pill"
+            >
+              {vehicleType.label}
+            </Button>
+          ))}
+        </Col>
+      </Row>
 
-				{/* Vehicle Type Filters */}
-				<Row className="mb-5">
-					<Col className="d-flex justify-content-center">
-						<div className="d-flex flex-wrap gap-3 justify-content-center">
-							{vehicleTypes.map((vehicleType) => (
-								<Button
-									key={vehicleType.id}
-									variant={selectedFilter === vehicleType.id ? "primary" : "outline-secondary"}
-									className="px-4 py-2"
-									onClick={() => setSelectedFilter(vehicleType.id)}
-									style={{
-										borderRadius: '8px',
-										fontWeight: '500',
-										borderColor: selectedFilter === vehicleType.id ? '#FFD700' : '#dee2e6',
-										backgroundColor: selectedFilter === vehicleType.id ? '#FFD700' : 'transparent',
-										color: selectedFilter === vehicleType.id ? '#000' : '#6c757d',
-										transition: 'all 0.3s ease'
-									}}
-								>
-									<span className="me-2">{vehicleType.icon}</span>
-									{vehicleType.label}
-								</Button>
-							))}
-						</div>
-					</Col>
-				</Row>
+      {filteredCars.length === 0 ? (
+        <Row>
+          <Col className="text-center py-5">
+            <h4>No cars available yet</h4>
+            <p className="text-muted">
+              Be the first to list a vehicle for rent.
+            </p>
+            <Link to="/create-car">
+              <Button variant="primary">List your car</Button>
+            </Link>
+          </Col>
+        </Row>
+      ) : (
+        <Row>
+          {filteredCars.map((car) => (
+            <Col key={car.id} lg={4} md={6} className="mb-4">
+              <Card className="h-100 car-card border-0 shadow-sm">
+                <Card.Body className="p-4">
+                  <div className="text-center mb-3">
+                    <img
+                      src={resolveCarImage(car.cover_photo)}
+                      alt={car.title}
+                      className="car-card-image"
+                    />
+                  </div>
 
-				{/* Car Grid */}
-				<Row>
-					{filteredCars.map((car) => (
-						<Col key={car.id} lg={4} md={6} className="mb-4">
-							<Card className="h-100 border-0 shadow-sm" style={{
-								borderRadius: '12px',
-								transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-								overflow: 'hidden'
-							}}>
-								<Card.Body className="p-4">
-									{/* Car Image */}
-									<div className="text-center mb-3">
-										<img
-											src={car.image}
-											alt={`${car.brand} ${car.type}`}
-											style={{
-												width: '100%',
-												height: '120px',
-												objectFit: 'cover',
-												borderRadius: '8px',
-												boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-											}}
-										/>
-									</div>
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                      <h5 className="fw-bold mb-1">{car.title}</h5>
+                      <p className="text-muted mb-0">{car.car_type}</p>
+                    </div>
+                    <div className="text-end">
+                      <h4 className="fw-bold mb-0 text-primary">
+                        ${Number(car.price).toLocaleString()}
+                      </h4>
+                      <small className="text-muted">per day</small>
+                    </div>
+                  </div>
 
-									{/* Car Details */}
-									<div className="d-flex justify-content-between align-items-start mb-3">
-										<div>
-											<h5 className="fw-bold mb-1">{car.brand}</h5>
-											<p className="text-muted mb-0">{car.type}</p>
-										</div>
-										<div className="text-end">
-																			<h4 className="fw-bold mb-0" style={{ color: '#000' }}>
-									${car.price}
-								</h4>
-											<small className="text-muted">per day</small>
-										</div>
-									</div>
+                  <div className="d-flex justify-content-center gap-4 mb-3 text-muted small">
+                    <span>
+                      <FaCog className="me-1" />
+                      {car.advert_type}
+                    </span>
+                    <span>
+                      <FaUsers className="me-1" />
+                      {car.total_seats} seats
+                    </span>
+                    <span>
+                      <FaMapMarkerAlt className="me-1" />
+                      {car.city}
+                    </span>
+                  </div>
 
-									{/* Car Features */}
-									<div className="d-flex justify-content-center gap-3 mb-3">
-										<div className="text-center">
-											<FaCog className="mb-1" style={{ color: '#FFD700' }} />
-											<small className="d-block text-muted">{car.transmission}</small>
-										</div>
-										<div className="text-center">
-											<FaGasPump className="mb-1" style={{ color: '#FFD700' }} />
-											<small className="d-block text-muted">{car.fuel}</small>
-										</div>
-										<div className="text-center">
-											<FaSnowflake className="mb-1" style={{ color: '#FFD700' }} />
-											<small className="d-block text-muted">Air Conditioner</small>
-										</div>
-									</div>
-
-									{/* View Details Button */}
-									<Link to={`/car/${car.id}`} className="text-decoration-none">
-										<Button
-											variant="primary"
-											className="w-100"
-											style={{
-												borderRadius: '8px',
-												backgroundColor: '#FFD700',
-												borderColor: '#FFD700',
-												color: '#000'
-											}}
-										>
-											View Details
-										</Button>
-									</Link>
-								</Card.Body>
-							</Card>
-						</Col>
-					))}
-				</Row>
-
-				{/* Car Brand Logos Section */}
-				<Row className="mt-5 pt-5">
-					<Col className="text-center">
-						<h6 className="fw-bold mb-4">Our Partners</h6>
-						<div className="d-flex justify-content-center align-items-center gap-5 flex-wrap">
-							{['Toyota', 'Ford', 'Mercedes-Benz', 'Jeep', 'BMW', 'Audi'].map((brand, index) => (
-								<div key={index} style={{
-									width: '80px',
-									height: '40px',
-									border: '2px solid #dee2e6',
-									borderRadius: '8px',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									fontWeight: '600',
-									color: '#6c757d',
-									fontSize: '0.9rem'
-								}}>
-									{brand}
-								</div>
-							))}
-						</div>
-					</Col>
-				</Row>
-			</Container>
-		</>
-	);
+                  <Link to={`/car/${car.slug}`} className="text-decoration-none">
+                    <Button variant="primary" className="w-100">
+                      View & Book
+                    </Button>
+                  </Link>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+    </Container>
+  );
 };
 
 export default CarsPage;

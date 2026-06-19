@@ -6,6 +6,24 @@ const getCars = async () => {
 	return response.data;
 };
 
+// get nearby cars for rent
+const getNearbyCars = async ({ latitude, longitude, radius = 10, car_type }) => {
+	const params = new URLSearchParams({
+		latitude: String(latitude),
+		longitude: String(longitude),
+		radius: String(radius),
+	});
+	if (car_type) params.append("car_type", car_type);
+	const response = await api.get(`/cars/nearby/?${params.toString()}`);
+	return response.data;
+};
+
+// update car location
+const updateCarLocation = async (slug, locationData) => {
+	const response = await api.patch(`/cars/location/update/${slug}/`, locationData);
+	return response.data;
+};
+
 //get user's cars
 const getUserCars = async () => {
 	const response = await api.get("/cars/agents/");
@@ -36,13 +54,41 @@ const deleteCar = async (slug) => {
 	return response.data;
 };
 
+// upload car images (multipart)
+const uploadCarImages = async (slug, photos) => {
+	const formData = new FormData();
+
+	Object.entries(photos).forEach(([field, entry]) => {
+		if (entry?.file instanceof File) {
+			formData.append(field, entry.file);
+		}
+	});
+
+	if (![...formData.keys()].length) {
+		return null;
+	}
+
+	const response = await api.post(`/cars/upload-image/${slug}/`, formData, {
+		transformRequest: [
+			(data, headers) => {
+				delete headers["Content-Type"];
+				return data;
+			},
+		],
+	});
+	return response.data;
+};
+
 const carAPIService = {
 	getCars,
+	getNearbyCars,
 	getUserCars,
 	getCar,
 	createCar,
 	updateCar,
-	deleteCar
+	deleteCar,
+	updateCarLocation,
+	uploadCarImages,
 };
 
 export default carAPIService;

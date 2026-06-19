@@ -1,8 +1,26 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import carAPIService from "./carAPIService";
 
+const formatApiError = (error) => {
+	if (error.response?.data) {
+		const data = error.response.data;
+		if (typeof data === "string") return data;
+		if (data.message) return data.message;
+		if (typeof data === "object") {
+			return Object.entries(data)
+				.map(([field, value]) => {
+					const detail = Array.isArray(value) ? value.join(", ") : String(value);
+					return `${field}: ${detail}`;
+				})
+				.join("; ");
+		}
+	}
+	return error.message || error.toString();
+};
+
 const initialState = {
 	cars: [],
+	nearbyCars: [],
 	userCars: [],
 	car: {},
 	isError: false,
@@ -18,14 +36,19 @@ export const getCars = createAsyncThunk(
 		try {
 			return await carAPIService.getCars();
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
+			return thunkAPI.rejectWithValue(formatApiError(error));
+		}
+	}
+);
 
-			return thunkAPI.rejectWithValue(message);
+// get nearby cars
+export const getNearbyCars = createAsyncThunk(
+	"cars/getNearby",
+	async (params, thunkAPI) => {
+		try {
+			return await carAPIService.getNearbyCars(params);
+		} catch (error) {
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -37,14 +60,7 @@ export const getUserCars = createAsyncThunk(
 		try {
 			return await carAPIService.getUserCars();
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
-
-			return thunkAPI.rejectWithValue(message);
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -56,14 +72,7 @@ export const getCar = createAsyncThunk(
 		try {
 			return await carAPIService.getCar(slug);
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
-
-			return thunkAPI.rejectWithValue(message);
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -75,14 +84,7 @@ export const createCar = createAsyncThunk(
 		try {
 			return await carAPIService.createCar(carData);
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
-
-			return thunkAPI.rejectWithValue(message);
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -94,14 +96,7 @@ export const updateCar = createAsyncThunk(
 		try {
 			return await carAPIService.updateCar(slug, carData);
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
-
-			return thunkAPI.rejectWithValue(message);
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -113,14 +108,7 @@ export const deleteCar = createAsyncThunk(
 		try {
 			return await carAPIService.deleteCar(slug);
 		} catch (error) {
-			const message =
-				(error.response &&
-					error.response.data &&
-					error.response.data.message) ||
-				error.message ||
-				error.toString();
-
-			return thunkAPI.rejectWithValue(message);
+			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
 	}
 );
@@ -129,7 +117,12 @@ export const carSlice = createSlice({
 	name: "car",
 	initialState,
 	reducers: {
-		reset: (state) => initialState,
+		reset: (state) => {
+			state.isError = false;
+			state.isLoading = false;
+			state.isSuccess = false;
+			state.message = "";
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -139,10 +132,21 @@ export const carSlice = createSlice({
 			})
 			.addCase(getCars.fulfilled, (state, action) => {
 				state.isLoading = false;
-				state.isSuccess = true;
 				state.cars = action.payload.results;
 			})
 			.addCase(getCars.rejected, (state, action) => {
+				state.isLoading = false;
+				state.isError = true;
+				state.message = action.payload;
+			})
+			.addCase(getNearbyCars.pending, (state) => {
+				state.isLoading = true;
+			})
+			.addCase(getNearbyCars.fulfilled, (state, action) => {
+				state.isLoading = false;
+				state.nearbyCars = action.payload;
+			})
+			.addCase(getNearbyCars.rejected, (state, action) => {
 				state.isLoading = false;
 				state.isError = true;
 				state.message = action.payload;
@@ -153,7 +157,6 @@ export const carSlice = createSlice({
 			})
 			.addCase(getUserCars.fulfilled, (state, action) => {
 				state.isLoading = false;
-				state.isSuccess = true;
 				state.userCars = action.payload.results;
 			})
 			.addCase(getUserCars.rejected, (state, action) => {
@@ -167,7 +170,6 @@ export const carSlice = createSlice({
 			})
 			.addCase(getCar.fulfilled, (state, action) => {
 				state.isLoading = false;
-				state.isSuccess = true;
 				state.car = action.payload;
 			})
 			.addCase(getCar.rejected, (state, action) => {

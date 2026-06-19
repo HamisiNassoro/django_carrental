@@ -3,6 +3,7 @@ import { Badge, Button, Card, Col, Row } from "react-bootstrap";
 import { FaBed, FaShower } from "react-icons/fa";
 import { GiStairs } from "react-icons/gi";
 import { Link } from "react-router-dom";
+import { resolveCarImage } from "../utils/mediaUrl";
 
 const Car = ({ car }) => {
 	function numberWithCommas(x) {
@@ -18,7 +19,7 @@ const Car = ({ car }) => {
 				{car.advert_type}
 			</Badge>
 			<Link to={`/car/${car.slug}`}>
-				<Card.Img src={car.cover_photo} variant="top" />
+				<Card.Img src={resolveCarImage(car.cover_photo)} variant="top" />
 			</Link>
 			<Card.Title className="car-price">
 				${numberWithCommas(Number(car.price))}

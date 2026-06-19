@@ -5,10 +5,11 @@ import { toast } from "react-toastify";
 import { FaEdit, FaTrash, FaPlus, FaEye } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
-import { getUserCars, deleteCar, reset } from "../features/cars/carSlice";
+import { getUserCars, deleteCar } from "../features/cars/carSlice";
+import { resolveCarImage } from "../utils/mediaUrl";
 
 const CarManagementPage = () => {
-	const { userCars, isLoading, isError, isSuccess, message } = useSelector(
+	const { userCars, isLoading, isError, message } = useSelector(
 		(state) => state.cars
 	);
 
@@ -18,27 +19,29 @@ const CarManagementPage = () => {
 	const [carToDelete, setCarToDelete] = useState(null);
 
 	useEffect(() => {
-		if (isError) {
+		dispatch(getUserCars());
+	}, [dispatch]);
+
+	useEffect(() => {
+		if (isError && message) {
 			toast.error(message, { icon: "😭" });
 		}
-
-		if (isSuccess) {
-			dispatch(reset());
-		}
-
-		dispatch(getUserCars());
-	}, [dispatch, isError, isSuccess, message]);
+	}, [isError, message]);
 
 	const handleDeleteClick = (car) => {
 		setCarToDelete(car);
 		setShowDeleteModal(true);
 	};
 
-	const handleDeleteConfirm = () => {
+	const handleDeleteConfirm = async () => {
 		if (carToDelete) {
-			dispatch(deleteCar(carToDelete.slug));
+			const result = await dispatch(deleteCar(carToDelete.slug));
 			setShowDeleteModal(false);
 			setCarToDelete(null);
+			if (deleteCar.fulfilled.match(result)) {
+				toast.success("Car deleted successfully");
+				dispatch(getUserCars());
+			}
 		}
 	};
 
@@ -69,20 +72,15 @@ const CarManagementPage = () => {
 									Manage your car listings
 								</p>
 							</div>
-							<Link to="/create-car">
-								<Button
-									variant="primary"
-									className="d-flex align-items-center gap-2"
-									style={{
-										backgroundColor: '#FFD700',
-										borderColor: '#FFD700',
-										color: '#000'
-									}}
-								>
-									<FaPlus />
-									Add New Car
-								</Button>
-							</Link>
+							<Button
+								as={Link}
+								to="/create-car"
+								variant="primary"
+								className="btn-accent d-flex align-items-center gap-2"
+							>
+								<FaPlus />
+								Add New Car
+							</Button>
 						</div>
 					</Col>
 				</Row>
@@ -97,20 +95,15 @@ const CarManagementPage = () => {
 									<p className="text-muted mb-4">
 										You haven't added any cars yet. Start by adding your first car!
 									</p>
-									<Link to="/create-car">
-										<Button
-											variant="primary"
-											className="d-flex align-items-center gap-2 mx-auto"
-											style={{
-												backgroundColor: '#FFD700',
-												borderColor: '#FFD700',
-												color: '#000'
-											}}
-										>
-											<FaPlus />
-											Add Your First Car
-										</Button>
-									</Link>
+									<Button
+										as={Link}
+										to="/create-car"
+										variant="primary"
+										className="btn-accent d-flex align-items-center gap-2 mx-auto"
+									>
+										<FaPlus />
+										Add Your First Car
+									</Button>
 								</Card.Body>
 							</Card>
 						</Col>
@@ -127,7 +120,7 @@ const CarManagementPage = () => {
 									{/* Car Image */}
 									<div className="position-relative">
 										<img
-											src={car.cover_photo}
+											src={resolveCarImage(car.cover_photo)}
 											alt={car.title}
 											style={{
 												width: '100%',

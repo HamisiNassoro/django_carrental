@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Nav, Navbar, Button } from "react-bootstrap";
 import { GiCarWheel } from "react-icons/gi";
-import { FaPhone, FaCar, FaUser, FaSignOutAlt, FaBars } from "react-icons/fa";
+import { FaPhone, FaCar, FaUser, FaSignOutAlt, FaBars, FaMapMarkerAlt } from "react-icons/fa";
 import { LinkContainer } from "react-router-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -85,12 +85,32 @@ const Header = () => {
 									<span className="nav-text">Vehicles</span>
 								</Nav.Link>
 							</LinkContainer>
+							<LinkContainer to="/nearby">
+								<Nav.Link className={`nav-item ${isActive('/nearby') ? 'active' : ''}`}>
+									<FaMapMarkerAlt className="nav-icon" />
+									<span className="nav-text">Nearby</span>
+								</Nav.Link>
+							</LinkContainer>
 							<LinkContainer to="/my-cars">
 								<Nav.Link className={`nav-item ${isActive('/my-cars') ? 'active' : ''}`}>
 									<FaCar className="nav-icon" />
 									<span className="nav-text">My Cars</span>
 								</Nav.Link>
 							</LinkContainer>
+							{user && (
+								<>
+									<LinkContainer to="/my-bookings">
+										<Nav.Link className={`nav-item ${isActive('/my-bookings') ? 'active' : ''}`}>
+											<span className="nav-text">My Bookings</span>
+										</Nav.Link>
+									</LinkContainer>
+									<LinkContainer to="/owner-bookings">
+										<Nav.Link className={`nav-item ${isActive('/owner-bookings') ? 'active' : ''}`}>
+											<span className="nav-text">Rental Requests</span>
+										</Nav.Link>
+									</LinkContainer>
+								</>
+							)}
 							<Nav.Link href="#details" className="nav-item">
 								<span className="nav-text">Details</span>
 							</Nav.Link>

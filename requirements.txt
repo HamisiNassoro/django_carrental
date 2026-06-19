@@ -1,9 +1,9 @@
-Django>=4.2.0
+Django>=4.2,<5.0
 djangorestframework>=3.15.0
 django-environ==0.7.0
-django-filter==21.1
+django-filter>=24.2
 django-autoslug==1.9.8
-django-countries==7.2.1
+django-countries>=7.6.1
 Pillow>=11.0.0
 django-phonenumber-field==5.2.0
 phonenumbers==8.12.33
@@ -27,3 +27,4 @@ argh==0.26.2
 PyYAML>=6.0.0
 watchdog==1.0.2
 gunicorn>=21.0.0
+setuptools>=70.0.0

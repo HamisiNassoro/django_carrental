@@ -1,10 +1,13 @@
 import axios from "axios";
 
-// Get API URL from environment variable or use default
-// For production, set REACT_APP_API_URL in your deployment platform
 const API_URL = process.env.REACT_APP_API_URL || "/api";
 
-// Create axios instance
+const AUTH_SKIP_REDIRECT_PATHS = [
+  "/v1/auth/jwt/create/",
+  "/v1/auth/jwt/refresh/",
+  "/v1/auth/users/",
+];
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -12,40 +15,43 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    console.log("Request to:", config.url);
-    console.log("Token present:", !!token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("Authorization header added");
-    } else {
-      console.log("No token found, request will be unauthenticated");
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle auth errors
 api.interceptors.response.use(
-  (response) => {
-    console.log("Response received:", response.status, response.config.url);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.log("Response error:", error.response?.status, error.config?.url, error.response?.data);
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      console.log("401 error - clearing auth data and redirecting to login");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || "";
+
+    if (status === 401) {
+      const shouldSkipRedirect = AUTH_SKIP_REDIRECT_PATHS.some((path) =>
+        requestUrl.includes(path)
+      );
+
+      if (!shouldSkipRedirect) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+
+        const isAuthPage =
+          window.location.pathname === "/login" ||
+          window.location.pathname === "/register";
+
+        if (!isAuthPage) {
+          window.location.href = "/login";
+        }
+      }
     }
+
     return Promise.reject(error);
   }
 );

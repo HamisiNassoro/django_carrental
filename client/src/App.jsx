@@ -8,70 +8,83 @@ import NotFound from "./components/NotFound";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import AuthTest from "./components/AuthTest";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthInitializer from "./components/AuthInitializer";
 import HomePage from "./pages/HomePage";
 import CarsPage from "./pages/CarsPage";
 import CarDetailPage from "./pages/CarDetailPage";
 import CarManagementPage from "./pages/CarManagementPage";
 import CreateCarPage from "./pages/CreateCarPage";
 import EditCarPage from "./pages/EditCarPage";
+import MyBookingsPage from "./pages/MyBookingsPage";
+import OwnerBookingsPage from "./pages/OwnerBookingsPage";
+import NearbyPage from "./pages/NearbyPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import ContactUsPage from "./pages/ContactUsPage";
 
 const App = () => {
 	return (
-		<>
-			<Router>
+		<Router>
+			<AuthInitializer>
 				<Header />
 				<main className="py-3">
 					<Routes>
 						<Route path="/" element={<HomePage />} />
-						<Route
-							path="/login"
-							element={<Login />}
-						/>
-						<Route
-							path="/register"
-							element={<Register />}
-						/>
-						<Route
-							path="/auth-test"
-							element={<AuthTest />}
-						/>
-						<Route
-							path="/cars"
-							element={<CarsPage />}
-						/>
-						<Route
-							path="/car/:slug"
-							element={<CarDetailPage />}
-						/>
+						<Route path="/login" element={<Login />} />
+						<Route path="/register" element={<Register />} />
+						<Route path="/auth-test" element={<AuthTest />} />
+						<Route path="/cars" element={<CarsPage />} />
+						<Route path="/nearby" element={<NearbyPage />} />
+						<Route path="/car/:slug" element={<CarDetailPage />} />
 						<Route
 							path="/my-cars"
-							element={<CarManagementPage />}
+							element={
+								<ProtectedRoute>
+									<CarManagementPage />
+								</ProtectedRoute>
+							}
 						/>
 						<Route
 							path="/create-car"
-							element={<CreateCarPage />}
+							element={
+								<ProtectedRoute>
+									<CreateCarPage />
+								</ProtectedRoute>
+							}
 						/>
 						<Route
 							path="/edit-car/:slug"
-							element={<EditCarPage />}
+							element={
+								<ProtectedRoute>
+									<EditCarPage />
+								</ProtectedRoute>
+							}
 						/>
 						<Route
-							path="/about"
-							element={<AboutUsPage />}
+							path="/my-bookings"
+							element={
+								<ProtectedRoute>
+									<MyBookingsPage />
+								</ProtectedRoute>
+							}
 						/>
 						<Route
-							path="/contact"
-							element={<ContactUsPage />}
+							path="/owner-bookings"
+							element={
+								<ProtectedRoute>
+									<OwnerBookingsPage />
+								</ProtectedRoute>
+							}
 						/>
+						<Route path="/about" element={<AboutUsPage />} />
+						<Route path="/contact" element={<ContactUsPage />} />
 						<Route path="*" element={<NotFound />} />
 					</Routes>
 					<ToastContainer theme="dark" />
 				</main>
 				<Footer />
-			</Router>
-		</>
+			</AuthInitializer>
+		</Router>
 	);
 };
 

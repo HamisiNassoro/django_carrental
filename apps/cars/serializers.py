@@ -8,6 +8,18 @@ from .models import Car, CarViews
 from apps.profiles.serializers import ProfileSerializer
 from apps.bookings.models import Booking, BookingStatus
 
+
+def build_media_url(serializer, image_field):
+    """Return an absolute URL so the React app can load images from Django."""
+    if not image_field or not getattr(image_field, "name", None):
+        return None
+    url = image_field.url
+    request = serializer.context.get("request")
+    if request and url:
+        return request.build_absolute_uri(url)
+    return url
+
+
 class CarSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     country = CountryField(name_only=True)
@@ -58,34 +70,24 @@ class CarSerializer(serializers.ModelSerializer):
         return obj.user.username
 
     def get_cover_photo(self, obj):
-        if obj.cover_photo:
-            return obj.cover_photo.url
-        return None
+        return build_media_url(self, obj.cover_photo)
 
     def get_profile_photo(self, obj):
-        if hasattr(obj.user, 'profile') and obj.user.profile.profile_photo:
-            return obj.user.profile.profile_photo.url
+        if hasattr(obj.user, "profile") and obj.user.profile.profile_photo:
+            return build_media_url(self, obj.user.profile.profile_photo)
         return None
 
     def get_photo1(self, obj):
-        if obj.photo1:
-            return obj.photo1.url
-        return None
+        return build_media_url(self, obj.photo1)
 
     def get_photo2(self, obj):
-        if obj.photo2:
-            return obj.photo2.url
-        return None
+        return build_media_url(self, obj.photo2)
 
     def get_photo3(self, obj):
-        if obj.photo3:
-            return obj.photo3.url
-        return None
+        return build_media_url(self, obj.photo3)
 
     def get_photo4(self, obj):
-        if obj.photo4:
-            return obj.photo4.url
-        return None
+        return build_media_url(self, obj.photo4)
 
 class CarDetailSerializer(CarSerializer):
     """Extended serializer for car details with additional fields"""
@@ -95,9 +97,11 @@ class CarDetailSerializer(CarSerializer):
 
 class CarCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating cars"""
-    
+
     country = CountryField(name_only=True)
-    
+    latitude = serializers.FloatField(write_only=True, required=False)
+    longitude = serializers.FloatField(write_only=True, required=False)
+
     class Meta:
         model = Car
         fields = [
@@ -122,35 +126,37 @@ class CarCreateSerializer(serializers.ModelSerializer):
             "photo4",
             "published_status",
             "location",
+            "latitude",
+            "longitude",
             "current_location",
-            "is_available"
+            "is_available",
         ]
-    
+
     def validate(self, attrs):
-        """Validate car data before creation"""
-        # Validate price
-        price = attrs.get('price')
+        price = attrs.get("price")
         if price and price <= 0:
             raise serializers.ValidationError("Price must be greater than 0")
-        
-        # Validate total seats
-        total_seats = attrs.get('total_seats')
+
+        total_seats = attrs.get("total_seats")
         if total_seats and total_seats < 0:
             raise serializers.ValidationError("Total seats cannot be negative")
-        
-        # Validate location if provided
-        location = attrs.get('location')
-        if location:
-            if not isinstance(location, Point):
-                raise serializers.ValidationError("Location must be a valid Point object")
-            # PointField automatically validates coordinates
-        
+
+        latitude = attrs.get("latitude")
+        longitude = attrs.get("longitude")
+        if latitude is not None and (latitude < -90 or latitude > 90):
+            raise serializers.ValidationError("Latitude must be between -90 and 90")
+        if longitude is not None and (longitude < -180 or longitude > 180):
+            raise serializers.ValidationError("Longitude must be between -180 and 180")
+        if latitude is not None and longitude is not None:
+            attrs["location"] = Point(longitude, latitude, srid=4326)
+
         return attrs
-    
+
     def create(self, validated_data):
-        """Create a new car with the current user as owner"""
-        # Set the user to the current authenticated user
-        validated_data['user'] = self.context['request'].user
+        validated_data.pop("latitude", None)
+        validated_data.pop("longitude", None)
+        validated_data.setdefault("is_available", True)
+        validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 
 class CarLocationSerializer(serializers.ModelSerializer):

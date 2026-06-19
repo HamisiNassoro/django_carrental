@@ -25,10 +25,18 @@ DATABASES = {
     }
 }
 
-CELERY_BROKER_URL = env("CELERY_BROKER")
-CELERY_RESULT_BACKEND = env("CELERY_BACKEND")
+CELERY_BROKER_URL = env("CELERY_BROKER", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_BACKEND", default="redis://localhost:6379/1")
 CELERY_TIMEZONE = "Africa/Nairobi"
+
+# GeoDjango (macOS/Homebrew): allow overriding library paths via env
+GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default=None)
+GEOS_LIBRARY_PATH = env("GEOS_LIBRARY_PATH", default=None)
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Dev-friendly auth: skip email activation so register/login works immediately
+DJOSER["SEND_ACTIVATION_EMAIL"] = False
+DJOSER["SEND_CONFIRMATION_EMAIL"] = False

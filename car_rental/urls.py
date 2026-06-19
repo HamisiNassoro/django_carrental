@@ -59,7 +59,7 @@ urlpatterns = [
     path("api/enquiries/", include("apps.enquiries.urls")),
     path("api/bookings/", include("apps.bookings.urls")),
     path("api/users/", include("apps.users.urls")),
-]## + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) ### this is for local use if using docker service on NGINX can be commented out
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 admin.site.site_header = "Car Rental Admin"

@@ -12,14 +12,14 @@ User = get_user_model()
 
 #### Adding fields from Profile model into the User model
 class UserSerializer(serializers.ModelSerializer):
-    gender = serializers.CharField(source="profile.gender")
-    phone_number = PhoneNumberField(source="profile.phone_number")
-    profile_photo = serializers.ImageField(source="profile.profile_photo")
-    country = CountryField(source="profile.country")
-    city = serializers.CharField(source="profile.city")
     first_name = serializers.SerializerMethodField()
     last_name = serializers.SerializerMethodField()
-    full_name = serializers.SerializerMethodField(source="get_full_name")
+    full_name = serializers.SerializerMethodField()
+    gender = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+    profile_photo = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -38,10 +38,39 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
     def get_first_name(self, obj):
-        return obj.first_name.title()
+        return obj.first_name.title() if obj.first_name else ""
 
     def get_last_name(self, obj):
-        return obj.last_name.title()
+        return obj.last_name.title() if obj.last_name else ""
+
+    def get_full_name(self, obj):
+        full_name = obj.get_full_name()
+        return full_name.title() if full_name else obj.username
+
+    def _get_profile(self, obj):
+        return getattr(obj, "profile", None)
+
+    def get_gender(self, obj):
+        profile = self._get_profile(obj)
+        return profile.gender if profile else None
+
+    def get_phone_number(self, obj):
+        profile = self._get_profile(obj)
+        return str(profile.phone_number) if profile and profile.phone_number else None
+
+    def get_profile_photo(self, obj):
+        profile = self._get_profile(obj)
+        if profile and profile.profile_photo:
+            return profile.profile_photo.url
+        return None
+
+    def get_country(self, obj):
+        profile = self._get_profile(obj)
+        return str(profile.country) if profile and profile.country else None
+
+    def get_city(self, obj):
+        profile = self._get_profile(obj)
+        return profile.city if profile else None
 
     ##Help us dynamically put a value to serializer fields
     def to_representation(self, instance):
@@ -54,7 +83,15 @@ class UserSerializer(serializers.ModelSerializer):
 class CreateUserSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "password"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "password",
+            "re_password",
+        ]
 
 class UserLocationSerializer(serializers.ModelSerializer):
     """Serializer for user location data"""

@@ -24,7 +24,7 @@ function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
 
@@ -32,15 +32,15 @@ function Register() {
     if (isError) {
       toast.error(message);
       setIsSubmitting(false);
+      dispatch(reset());
     }
 
-    if (isSuccess || user) {
+    if (isSuccess) {
       toast.success("Registration successful! Welcome to Car Rental!");
       navigate("/");
+      dispatch(reset());
     }
-
-    dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [isError, isSuccess, message, navigate, dispatch]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -106,6 +106,7 @@ function Register() {
         username,
         email,
         password,
+        re_password: password2,
         first_name,
         last_name,
       };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login, reset } from "../features/auth/authSlice";
 import Spinner from "./Spinner";
@@ -18,9 +18,10 @@ function Login() {
   const { email, password } = formData;
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
 
@@ -28,15 +29,16 @@ function Login() {
     if (isError) {
       toast.error(message);
       setIsSubmitting(false);
+      dispatch(reset());
     }
 
-    if (isSuccess || user) {
+    if (isSuccess) {
       toast.success("Login successful! Welcome back!");
-      navigate("/");
+      const redirectTo = location.state?.from || "/";
+      navigate(redirectTo);
+      dispatch(reset());
     }
-
-    dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [isError, isSuccess, message, navigate, dispatch, location.state]);
 
   const validateForm = () => {
     const newErrors = {};

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.gis.geos import Point
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -81,39 +82,40 @@ class UpdateUserLocationAPIView(generics.UpdateAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def set_user_location(request):
     """Set user's current location (alternative to update endpoint)"""
-    
+
     try:
-        user_location, created = UserLocation.objects.get_or_create(
+        latitude = request.data.get("latitude")
+        longitude = request.data.get("longitude")
+        if latitude is None or longitude is None:
+            return Response(
+                {"error": "latitude and longitude are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        point = Point(float(longitude), float(latitude), srid=4326)
+        defaults = {
+            "location": point,
+            "address": request.data.get("address"),
+            "city": request.data.get("city"),
+            "state": request.data.get("state"),
+            "country": request.data.get("country"),
+            "is_active": True,
+        }
+
+        user_location, created = UserLocation.objects.update_or_create(
             user=request.user,
-            defaults={
-                'latitude': request.data.get('latitude'),
-                'longitude': request.data.get('longitude'),
-                'address': request.data.get('address'),
-                'city': request.data.get('city'),
-                'state': request.data.get('state'),
-                'country': request.data.get('country')
-            }
+            defaults=defaults,
         )
-        
-        if not created:
-            # Update existing location
-            user_location.latitude = request.data.get('latitude', user_location.latitude)
-            user_location.longitude = request.data.get('longitude', user_location.longitude)
-            user_location.address = request.data.get('address', user_location.address)
-            user_location.city = request.data.get('city', user_location.city)
-            user_location.state = request.data.get('state', user_location.state)
-            user_location.country = request.data.get('country', user_location.country)
-            user_location.save()
-        
+
         serializer = UserLocationResponseSerializer(user_location)
-        
+
         return Response({
             'message': 'Location set successfully',
             'created': created,
             'location': serializer.data
         })
-        
-    except Exception as e:
+
+    except (TypeError, ValueError) as e:
         return Response({
             'error': 'Failed to set location',
             'detail': str(e)

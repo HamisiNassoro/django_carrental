@@ -141,15 +141,17 @@ def update_car_api_view(request, slug):
 def create_car_api_view(request):
     user = request.user
     data = request.data
-    data["user"] = request.user.pkid
-    serializer = CarCreateSerializer(data=data)
+    serializer = CarCreateSerializer(data=data, context={"request": request})
 
     if serializer.is_valid():
-        serializer.save()
+        car = serializer.save()
         logger.info(
-            f"Car {serializer.data.get('title')} created by {user.username}"
+            f"Car {car.title} created by {user.username}"
         )
-        return Response(serializer.data)
+        return Response(
+            CarSerializer(car, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -182,18 +184,26 @@ def delete_car_api_view(request, slug):
 
 #### Function based view to upload product image
 @api_view(["POST"])
-def uploadCarImage(request):
-    data = request.data
+@permission_classes([permissions.IsAuthenticated])
+def uploadCarImage(request, slug):
+    try:
+        car = Car.objects.get(slug=slug)
+    except Car.DoesNotExist:
+        raise CarNotFound
 
-    car_id = data["car_id"]
-    car = Car.objects.get(id=car_id)
-    car.cover_photo = request.FILES.get("cover_photo")
-    car.photo1 = request.FILES.get("photo1")
-    car.photo2 = request.FILES.get("photo2")
-    car.photo3 = request.FILES.get("photo3")
-    car.photo4 = request.FILES.get("photo4")
+    if car.user != request.user:
+        return Response(
+            {"detail": "You do not have permission to update this car."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    for field in ("cover_photo", "photo1", "photo2", "photo3", "photo4"):
+        if field in request.FILES:
+            setattr(car, field, request.FILES[field])
+
     car.save()
-    return Response("Image(s) uploaded")
+    serializer = CarSerializer(car, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class NearbyCarsAPIView(generics.ListAPIView):
@@ -488,8 +498,8 @@ class UpdateCarLocationAPIView(generics.UpdateAPIView):
                 'car_id': car.id,
                 'slug': car.slug,
                 'title': car.title,
-                'latitude': car.latitude,
-                'longitude': car.longitude,
+                'latitude': car.location.y if car.location else None,
+                'longitude': car.location.x if car.location else None,
                 'current_location': car.current_location,
                 'city': car.city,
                 'state': car.state,

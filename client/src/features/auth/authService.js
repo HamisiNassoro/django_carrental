@@ -1,49 +1,77 @@
 import api from "../../utils/axios";
 
-// Get token from localStorage
-const getToken = () => {
-  const token = localStorage.getItem("token");
-  return token;
+const TOKEN_KEY = "token";
+const REFRESH_KEY = "refreshToken";
+const USER_KEY = "user";
+
+const getToken = () => localStorage.getItem(TOKEN_KEY);
+const getRefreshToken = () => localStorage.getItem(REFRESH_KEY);
+
+const setTokens = (access, refresh) => {
+  if (access) localStorage.setItem(TOKEN_KEY, access);
+  if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
 };
 
-// Set token in localStorage
-const setToken = (token) => {
-  localStorage.setItem("token", token);
+const setUser = (user) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
-// Remove token from localStorage
-const removeToken = () => {
-  localStorage.removeItem("token");
+const clearAuth = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(USER_KEY);
 };
 
-// Login user
-const login = async (userData) => {
-  const response = await api.post("/v1/auth/jwt/create/", userData);
-  if (response.data.access) {
-    setToken(response.data.access);
-    // Get user data after successful login
-    const userResponse = await api.get("/v1/auth/users/me/");
-    return userResponse.data;
-  }
-  return response.data;
-};
-
-// Logout user
-const logout = () => {
-  removeToken();
-  localStorage.removeItem("user");
-};
-
-// Get current user
-const getCurrentUser = async () => {
+const fetchCurrentUser = async () => {
   const response = await api.get("/v1/auth/users/me/");
+  setUser(response.data);
   return response.data;
 };
 
-// Register user
+const loginWithCredentials = async ({ email, password }) => {
+  const response = await api.post("/v1/auth/jwt/create/", {
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (!response.data.access) {
+    throw new Error("Login failed: no access token received");
+  }
+  setTokens(response.data.access, response.data.refresh);
+  return fetchCurrentUser();
+};
+
+const login = async (userData) => loginWithCredentials(userData);
+
+const logout = () => {
+  clearAuth();
+};
+
+const getCurrentUser = async () => {
+  if (!getToken()) {
+    throw new Error("No token found");
+  }
+  return fetchCurrentUser();
+};
+
 const register = async (userData) => {
-  const response = await api.post("/v1/auth/users/", userData);
-  return response.data;
+  await api.post("/v1/auth/users/", userData);
+  return loginWithCredentials({
+    email: userData.email,
+    password: userData.password,
+  });
+};
+
+const refreshAccessToken = async () => {
+  const refresh = getRefreshToken();
+  if (!refresh) {
+    throw new Error("No refresh token");
+  }
+  const response = await api.post("/v1/auth/jwt/refresh/", { refresh });
+  if (response.data.access) {
+    setTokens(response.data.access, refresh);
+    return response.data.access;
+  }
+  throw new Error("Token refresh failed");
 };
 
 const authService = {
@@ -51,9 +79,11 @@ const authService = {
   logout,
   getCurrentUser,
   register,
+  refreshAccessToken,
   getToken,
-  setToken,
-  removeToken,
+  getRefreshToken,
+  setTokens,
+  clearAuth,
 };
 
 export default authService;
