@@ -80,6 +80,11 @@ class Car(TimeStampedUUIDModel):
     price = models.DecimalField(
         verbose_name=_("Price"), max_digits=10, decimal_places=2, default=0.0
     )
+    currency = models.CharField(
+        verbose_name=_("Currency"),
+        max_length=3,
+        default="KES",
+    )
     tax = models.DecimalField(
         verbose_name=_("Car Tax"),
         max_digits=6,

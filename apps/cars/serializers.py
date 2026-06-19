@@ -49,6 +49,7 @@ class CarSerializer(serializers.ModelSerializer):
             "street_address",
             "car_number",
             "price",
+            "currency",
             "tax",
             "total_seats",
             "advert_type",
@@ -158,9 +159,15 @@ class CarCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        from apps.common.currency import currency_for_country
+
         validated_data.pop("latitude", None)
         validated_data.pop("longitude", None)
         validated_data.setdefault("is_available", True)
+        validated_data.setdefault(
+            "currency",
+            currency_for_country(validated_data.get("country", "KE")),
+        )
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 

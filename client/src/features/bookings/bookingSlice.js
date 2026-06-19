@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import bookingAPIService from "./bookingAPIService";
+import paymentAPIService from "../payments/paymentAPIService";
 
 const formatApiError = (error) => {
   const data = error.response?.data;
@@ -94,6 +95,39 @@ export const cancelBooking = createAsyncThunk(
   }
 );
 
+export const payBooking = createAsyncThunk(
+  "bookings/pay",
+  async ({ pkid, phoneNumber }, thunkAPI) => {
+    try {
+      return await paymentAPIService.payBooking(pkid, phoneNumber);
+    } catch (error) {
+      return thunkAPI.rejectWithValue(formatApiError(error));
+    }
+  }
+);
+
+export const activateBooking = createAsyncThunk(
+  "bookings/activate",
+  async (pkid, thunkAPI) => {
+    try {
+      return await bookingAPIService.activateBooking(pkid);
+    } catch (error) {
+      return thunkAPI.rejectWithValue(formatApiError(error));
+    }
+  }
+);
+
+export const completeBooking = createAsyncThunk(
+  "bookings/complete",
+  async (pkid, thunkAPI) => {
+    try {
+      return await bookingAPIService.completeBooking(pkid);
+    } catch (error) {
+      return thunkAPI.rejectWithValue(formatApiError(error));
+    }
+  }
+);
+
 export const bookingSlice = createSlice({
   name: "bookings",
   initialState,
@@ -148,7 +182,9 @@ export const bookingSlice = createSlice({
         const booking = state.ownerBookings.find(
           (item) => item.pkid === action.meta.arg
         );
-        if (booking) booking.status = action.payload.status;
+        if (booking) {
+          booking.status = action.payload.status || "AWAITING_PAYMENT";
+        }
       })
       .addCase(declineBooking.fulfilled, (state, action) => {
         const booking = state.ownerBookings.find(
@@ -161,6 +197,41 @@ export const bookingSlice = createSlice({
           (item) => item.pkid === action.meta.arg
         );
         if (booking) booking.status = action.payload.status;
+      })
+      .addCase(payBooking.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+      })
+      .addCase(payBooking.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const booking = state.myBookings.find(
+          (item) => item.pkid === action.meta.arg.pkid
+        );
+        if (booking) {
+          booking.status = action.payload.booking_status;
+          booking.latest_transaction = action.payload.transaction;
+        }
+      })
+      .addCase(payBooking.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(activateBooking.fulfilled, (state, action) => {
+        const updateList = (list) => {
+          const booking = list.find((item) => item.pkid === action.meta.arg);
+          if (booking) booking.status = action.payload.status;
+        };
+        updateList(state.myBookings);
+        updateList(state.ownerBookings);
+      })
+      .addCase(completeBooking.fulfilled, (state, action) => {
+        const updateList = (list) => {
+          const booking = list.find((item) => item.pkid === action.meta.arg);
+          if (booking) booking.status = action.payload.status;
+        };
+        updateList(state.myBookings);
+        updateList(state.ownerBookings);
       });
   },
 });

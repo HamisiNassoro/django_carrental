@@ -10,4 +10,6 @@ urlpatterns = [
     path("<int:pkid>/approve/", views.approve_booking, name="booking-approve"),
     path("<int:pkid>/decline/", views.decline_booking, name="booking-decline"),
     path("<int:pkid>/cancel/", views.cancel_booking, name="booking-cancel"),
+    path("<int:pkid>/activate/", views.activate_booking, name="booking-activate"),
+    path("<int:pkid>/complete/", views.complete_booking, name="booking-complete"),
 ]

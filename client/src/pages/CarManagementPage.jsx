@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { getUserCars, deleteCar } from "../features/cars/carSlice";
 import { resolveCarImage } from "../utils/mediaUrl";
+import { formatMoney } from "../utils/currency";
 
 const CarManagementPage = () => {
 	const { userCars, isLoading, isError, message } = useSelector(
@@ -151,7 +152,7 @@ const CarManagementPage = () => {
 											</div>
 											<div className="text-end">
 												<h4 className="fw-bold mb-0" style={{ color: '#000' }}>
-													${Number(car.price).toLocaleString()}
+													{formatMoney(car.price, car.currency || "KES")}
 												</h4>
 												<small className="text-muted">Price</small>
 											</div>

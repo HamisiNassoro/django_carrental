@@ -4,6 +4,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login, reset } from "../features/auth/authSlice";
 import Spinner from "./Spinner";
+import PasswordInput from "./PasswordInput";
 import "./Login.css";
 
 function Login() {
@@ -120,9 +121,8 @@ function Login() {
             )}
           </div>
           <div className="form-group">
-            <input
-              type="password"
-              className={`form-control ${errors.password ? 'error' : ''}`}
+            <PasswordInput
+              className={errors.password ? "error" : ""}
               id="password"
               name="password"
               value={password}

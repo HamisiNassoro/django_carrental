@@ -71,6 +71,7 @@ LOCAL_APPS = [
     "apps.cars",
     "apps.enquiries",
     "apps.bookings",
+    "apps.payments",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -261,3 +262,13 @@ logging.config.dictConfig(
         },
     }
 )
+
+# Payments / M-Pesa
+PLATFORM_COMMISSION_RATE = env("PLATFORM_COMMISSION_RATE", default="0.10")
+MOCK_MPESA = env.bool("MOCK_MPESA", default=True)
+MPESA_CONSUMER_KEY = env("MPESA_CONSUMER_KEY", default="")
+MPESA_CONSUMER_SECRET = env("MPESA_CONSUMER_SECRET", default="")
+MPESA_SHORTCODE = env("MPESA_SHORTCODE", default="174379")
+MPESA_PASSKEY = env("MPESA_PASSKEY", default="")
+MPESA_CALLBACK_URL = env("MPESA_CALLBACK_URL", default="")
+MPESA_ENV = env("MPESA_ENV", default="sandbox")

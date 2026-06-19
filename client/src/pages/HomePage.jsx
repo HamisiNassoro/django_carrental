@@ -1,10 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Container, Row, Col, Form, Card } from "react-bootstrap";
-import { LinkContainer } from "react-router-bootstrap";
-import { Link } from "react-router-dom";
-import { FaSearch, FaPhone, FaEnvelope, FaMapMarkerAlt, FaCar, FaUser, FaCalendar, FaRoad, FaDownload, FaApple, FaGooglePlay } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { FaMapMarkerAlt, FaCar, FaUser, FaCalendar, FaRoad, FaApple, FaGooglePlay } from "react-icons/fa";
+import { getCars } from "../features/cars/carSlice";
+import { formatDailyRate } from "../utils/currency";
+import { resolveCarImage } from "../utils/mediaUrl";
+import { CAR_TYPE_OPTIONS } from "../constants/carTypes";
+
+const PLACEHOLDER_FLEET = [
+	{ slug: null, name: "Mercedes", type: "Luxury", price: 25000, image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop" },
+	{ slug: null, name: "Porsche", type: "SUV", price: 50000, image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop" },
+	{ slug: null, name: "BMW", type: "Sedan", price: 35000, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop" },
+];
 
 const HomePage = () => {
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
+	const { cars } = useSelector((state) => state.cars);
+
 	const [bookingForm, setBookingForm] = useState({
 		carType: "",
 		rentalPlace: "",
@@ -12,6 +27,28 @@ const HomePage = () => {
 		rentalDate: "",
 		returnDate: ""
 	});
+
+	useEffect(() => {
+		dispatch(getCars({ rentals_only: true }));
+	}, [dispatch]);
+
+	const fleetCars = (cars || []).slice(0, 6);
+	const displayFleet =
+		fleetCars.length > 0
+			? fleetCars.map((car) => ({
+					slug: car.slug,
+					name: car.title,
+					type: car.car_type,
+					price: car.price,
+					currency: car.currency || "KES",
+					image: resolveCarImage(car.cover_photo),
+					seats: car.total_seats,
+					city: car.city,
+			  }))
+			: PLACEHOLDER_FLEET.map((car) => ({
+					...car,
+					currency: "KES",
+			  }));
 
 	const features = [
 		{
@@ -31,70 +68,45 @@ const HomePage = () => {
 		}
 	];
 
-	const carList = [
-		{
-			id: 1,
-			name: "Mercedes",
-			type: "Sedan",
-			price: "$25 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop"
-		},
-		{
-			id: 2,
-			name: "Porsche",
-			type: "SUV",
-			price: "$50 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop"
-		},
-		{
-			id: 3,
-			name: "BMW",
-			type: "Sedan",
-			price: "$35 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-		},
-		{
-			id: 4,
-			name: "Audi",
-			type: "SUV",
-			price: "$45 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop"
-		},
-		{
-			id: 5,
-			name: "Lexus",
-			type: "Sedan",
-			price: "$30 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&h=300&fit=crop"
-		},
-		{
-			id: 6,
-			name: "Range Rover",
-			type: "SUV",
-			price: "$60 per day",
-			features: ["Automat", "PD 85", "Air Conditioner"],
-			image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop"
-		}
-	];
-
-	const stats = [
-		{ icon: <FaCar />, number: "200+", label: "Vehicles" },
-		{ icon: <FaUser />, number: "15k+", label: "Happy Customers" },
-		{ icon: <FaCalendar />, number: "12+", label: "Years Experience" },
-		{ icon: <FaRoad />, number: "5m+", label: "Kilometers Driven" }
-	];
-
 	const handleBookingChange = (field, value) => {
 		setBookingForm(prev => ({
 			...prev,
 			[field]: value
 		}));
 	};
+
+	const handleBookNow = (e) => {
+		e.preventDefault();
+
+		if (!bookingForm.rentalDate || !bookingForm.returnDate) {
+			toast.info("Please select rental and return dates");
+			return;
+		}
+
+		if (bookingForm.returnDate < bookingForm.rentalDate) {
+			toast.error("Return date must be on or after rental date");
+			return;
+		}
+
+		navigate("/cars", {
+			state: {
+				bookingSearch: {
+					carType: bookingForm.carType,
+					rentalPlace: bookingForm.rentalPlace,
+					returnPlace: bookingForm.returnPlace,
+					start_date: bookingForm.rentalDate,
+					end_date: bookingForm.returnDate,
+				},
+			},
+		});
+		toast.success("Select a vehicle to complete your booking");
+	};
+	const stats = [
+		{ icon: <FaCar />, number: "200+", label: "Vehicles" },
+		{ icon: <FaUser />, number: "15k+", label: "Happy Customers" },
+		{ icon: <FaCalendar />, number: "12+", label: "Years Experience" },
+		{ icon: <FaRoad />, number: "5m+", label: "Kilometers Driven" }
+	];
 
 	return (
 		<>
@@ -160,6 +172,8 @@ const HomePage = () => {
 									Discover luxury and comfort with our premium fleet of vehicles. From business trips to family vacations, we provide reliable, well-maintained cars for every journey across Kenya.
 								</p>
 								<Button
+									as={Link}
+									to="/cars"
 									variant="warning"
 									size="lg"
 									className="px-4 py-3"
@@ -189,7 +203,7 @@ const HomePage = () => {
 									<Card.Body className="p-4">
 										<h4 className="fw-bold mb-4" style={{ color: '#333' }}>Book your car</h4>
 
-										<Form>
+										<Form onSubmit={handleBookNow}>
 											<Row>
 												<Col md={6} className="mb-3">
 													<Form.Select
@@ -197,10 +211,12 @@ const HomePage = () => {
 														onChange={(e) => handleBookingChange('carType', e.target.value)}
 														style={{ borderRadius: '8px', border: '1px solid #ddd' }}
 													>
-														<option value="">Car type</option>
-														<option value="sedan">Sedan</option>
-														<option value="suv">SUV</option>
-														<option value="luxury">Luxury</option>
+														<option value="">Any type</option>
+														{CAR_TYPE_OPTIONS.map((option) => (
+															<option key={option.value} value={option.value}>
+																{option.label}
+															</option>
+														))}
 													</Form.Select>
 												</Col>
 												<Col md={6} className="mb-3">
@@ -245,13 +261,17 @@ const HomePage = () => {
 												</Col>
 											</Row>
 											<Button
+												type="submit"
 												variant="warning"
 												size="lg"
 												className="w-100 py-3"
 												style={{
 													borderRadius: '8px',
 													fontWeight: '600',
-													fontSize: '1.1rem'
+													fontSize: '1.1rem',
+													backgroundColor: '#FFD700',
+													border: 'none',
+													color: '#000'
 												}}
 											>
 												Book now
@@ -352,14 +372,25 @@ const HomePage = () => {
 				<Container>
 					<div className="d-flex justify-content-between align-items-center mb-5">
 						<h2 className="fw-bold">Our Premium Fleet</h2>
-						<Button variant="link" className="text-decoration-none fw-bold">
+						<Button
+							as={Link}
+							to="/cars"
+							variant="link"
+							className="text-decoration-none fw-bold"
+						>
 							View All →
 						</Button>
 					</div>
 
+					{fleetCars.length === 0 && (
+						<p className="text-muted mb-4">
+							Sample vehicles shown below. List your car to appear here with live pricing in KSh.
+						</p>
+					)}
+
 					<Row>
-						{carList.map((car) => (
-							<Col key={car.id} lg={4} md={6} className="mb-4">
+						{displayFleet.map((car, index) => (
+							<Col key={car.slug || index} lg={4} md={6} className="mb-4">
 								<Card className="h-100 border-0 shadow-sm" style={{
 									borderRadius: '12px',
 									transition: 'transform 0.3s ease, box-shadow 0.3s ease'
@@ -380,33 +411,44 @@ const HomePage = () => {
 										</div>
 										<h5 className="fw-bold text-center mb-2">{car.name}</h5>
 										<p className="text-muted text-center mb-2">{car.type}</p>
-										<p className="fw-bold text-center mb-3" style={{ color: '#000' }}>{car.price}</p>
+										<p className="fw-bold text-center mb-3" style={{ color: '#000' }}>
+											{formatDailyRate(car.price, car.currency)}
+										</p>
 
-										<div className="d-flex justify-content-center gap-2 mb-3">
-											{car.features.map((feature, index) => (
-												<span key={index} className="badge bg-light text-dark px-2 py-1" style={{
-													fontSize: '0.75rem',
-													borderRadius: '4px'
-												}}>
-													{feature}
+										{car.seats && (
+											<div className="d-flex justify-content-center gap-2 mb-3">
+												<span className="badge bg-light text-dark px-2 py-1">
+													{car.seats} seats
 												</span>
-											))}
-										</div>
+												{car.city && (
+													<span className="badge bg-light text-dark px-2 py-1">
+														{car.city}
+													</span>
+												)}
+											</div>
+										)}
 
-										<Link to={`/car/${car.id}`} className="text-decoration-none">
-											<Button
-												variant="primary"
-												className="w-100"
-												style={{
-													borderRadius: '8px',
-													backgroundColor: '#FFD700',
-													borderColor: '#FFD700',
-													color: '#000'
-												}}
-											>
-												View Details
-											</Button>
-										</Link>
+										{car.slug ? (
+											<Link to={`/car/${car.slug}`} className="text-decoration-none">
+												<Button
+													variant="primary"
+													className="w-100 btn-accent"
+													style={{ borderRadius: '8px' }}
+												>
+													View Details
+												</Button>
+											</Link>
+										) : (
+											<Link to="/cars" className="text-decoration-none">
+												<Button
+													variant="primary"
+													className="w-100 btn-accent"
+													style={{ borderRadius: '8px' }}
+												>
+													Browse listings
+												</Button>
+											</Link>
+										)}
 									</Card.Body>
 								</Card>
 							</Col>

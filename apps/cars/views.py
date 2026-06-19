@@ -50,7 +50,6 @@ class CarFilter(django_filters.FilterSet):
 
 class ListAllCarsAPIView(generics.ListAPIView):
     serializer_class = CarSerializer
-    queryset = Car.objects.all().order_by("-created_at")
     pagination_class = CarPagination
     filter_backends = [
         DjangoFilterBackend,
@@ -61,6 +60,37 @@ class ListAllCarsAPIView(generics.ListAPIView):
     filterset_class = CarFilter
     search_fields = ["country", "city"]
     ordering_fields = ["created_at"]
+
+    def get_queryset(self):
+        queryset = Car.objects.all().order_by("-created_at")
+
+        rentals_only = self.request.query_params.get("rentals_only", "").lower()
+        if rentals_only in ("1", "true", "yes"):
+            queryset = queryset.filter(
+                is_available=True,
+                published_status=True,
+                advert_type=Car.AdvertType.FOR_RENT,
+            )
+
+        start_date = self.request.query_params.get("start_date")
+        end_date = self.request.query_params.get("end_date")
+        if start_date and end_date:
+            try:
+                from datetime import datetime
+
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+                from apps.bookings.models import BOOKING_RESERVED_STATUSES
+
+                queryset = queryset.exclude(
+                    bookings__start_date__lte=end,
+                    bookings__end_date__gte=start,
+                    bookings__status__in=BOOKING_RESERVED_STATUSES,
+                ).distinct()
+            except (ValueError, TypeError):
+                pass
+
+        return queryset
 
 
 class ListAgentsCarsAPIView(generics.ListAPIView):
@@ -416,15 +446,13 @@ class AdvancedCarSearchAPIView(generics.ListAPIView):
                 start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
                 end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
                 
-                # Check for booking conflicts
-                conflicting_bookings = Booking.objects.filter(
-                    car__in=queryset,
-                    start_date__lte=end_date,
-                    end_date__gte=start_date,
-                    status__in=[BookingStatus.PENDING, BookingStatus.APPROVED]
-                ).values_list('car_id', flat=True)
-                
-                queryset = queryset.exclude(id__in=conflicting_bookings)
+                from apps.bookings.models import BOOKING_RESERVED_STATUSES
+
+                queryset = queryset.exclude(
+                    bookings__start_date__lte=end_date,
+                    bookings__end_date__gte=start_date,
+                    bookings__status__in=BOOKING_RESERVED_STATUSES,
+                ).distinct()
                 
             except (ValueError, TypeError):
                 pass  # Skip invalid dates

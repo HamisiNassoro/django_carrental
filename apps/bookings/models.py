@@ -8,9 +8,22 @@ from apps.cars.models import Car
 
 class BookingStatus(models.TextChoices):
     PENDING = "PENDING", _("Pending")
-    APPROVED = "APPROVED", _("Approved")
+    AWAITING_PAYMENT = "AWAITING_PAYMENT", _("Awaiting Payment")
+    PAID = "PAID", _("Paid")
+    ACTIVE = "ACTIVE", _("Active")
+    COMPLETED = "COMPLETED", _("Completed")
+    APPROVED = "APPROVED", _("Approved")  # legacy; migrated to AWAITING_PAYMENT
     DECLINED = "DECLINED", _("Declined")
     CANCELLED = "CANCELLED", _("Cancelled")
+
+
+BOOKING_RESERVED_STATUSES = [
+    BookingStatus.PENDING,
+    BookingStatus.AWAITING_PAYMENT,
+    BookingStatus.PAID,
+    BookingStatus.ACTIVE,
+    BookingStatus.APPROVED,
+]
 
 
 class Booking(TimeStampedUUIDModel):
@@ -20,7 +33,10 @@ class Booking(TimeStampedUUIDModel):
     )
     start_date = models.DateField()
     end_date = models.DateField()
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    currency = models.CharField(max_length=3, default="KES")
+    platform_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    owner_payout = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     status = models.CharField(
         max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING
     )

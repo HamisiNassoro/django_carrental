@@ -4,18 +4,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 import {
+  bookingStatusLabel,
+  bookingStatusVariant,
+  formatMoney,
+} from "../utils/currency";
+import {
+  activateBooking,
   approveBooking,
+  completeBooking,
   declineBooking,
   getOwnerBookings,
   reset,
 } from "../features/bookings/bookingSlice";
-
-const statusVariant = {
-  PENDING: "warning",
-  APPROVED: "success",
-  DECLINED: "danger",
-  CANCELLED: "secondary",
-};
 
 const OwnerBookingsPage = () => {
   const dispatch = useDispatch();
@@ -29,13 +29,16 @@ const OwnerBookingsPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (isError) toast.error(message);
+    if (isError && message) toast.error(message);
   }, [isError, message]);
 
   const handleApprove = async (pkid) => {
     const result = await dispatch(approveBooking(pkid));
     if (approveBooking.fulfilled.match(result)) {
-      toast.success("Booking approved");
+      toast.success(
+        result.payload?.message ||
+          "Approved — renter will receive a payment prompt"
+      );
       dispatch(getOwnerBookings());
     } else {
       toast.error(result.payload || "Could not approve booking");
@@ -52,7 +55,27 @@ const OwnerBookingsPage = () => {
     }
   };
 
-  if (isLoading) return <Spinner />;
+  const handleActivate = async (pkid) => {
+    const result = await dispatch(activateBooking(pkid));
+    if (activateBooking.fulfilled.match(result)) {
+      toast.success("Rental marked as active");
+      dispatch(getOwnerBookings());
+    } else {
+      toast.error(result.payload || "Could not activate rental");
+    }
+  };
+
+  const handleComplete = async (pkid) => {
+    const result = await dispatch(completeBooking(pkid));
+    if (completeBooking.fulfilled.match(result)) {
+      toast.success(result.payload?.message || "Trip completed");
+      dispatch(getOwnerBookings());
+    } else {
+      toast.error(result.payload || "Could not complete trip");
+    }
+  };
+
+  if (isLoading && ownerBookings.length === 0) return <Spinner />;
 
   return (
     <Container className="py-5" style={{ marginTop: "80px" }}>
@@ -60,7 +83,7 @@ const OwnerBookingsPage = () => {
         <Col>
           <h1 className="fw-bold page-title">Rental Requests</h1>
           <p className="text-muted">
-            Approve or decline booking requests for your vehicles
+            Approve requests, then receive payout after the trip completes
           </p>
         </Col>
       </Row>
@@ -89,35 +112,65 @@ const OwnerBookingsPage = () => {
                         {booking.start_date} → {booking.end_date}
                       </p>
                     </div>
-                    <Badge bg={statusVariant[booking.status] || "secondary"}>
-                      {booking.status}
+                    <Badge bg={bookingStatusVariant[booking.status] || "secondary"}>
+                      {bookingStatusLabel[booking.status] || booking.status}
                     </Badge>
                   </div>
-                  <p className="mb-3">
-                    <strong>Total:</strong> $
-                    {Number(booking.total_price).toLocaleString()}
+                  <p className="mb-1">
+                    <strong>Rental total:</strong>{" "}
+                    {formatMoney(booking.total_price, booking.currency)}
+                  </p>
+                  <p className="mb-1 text-success">
+                    <strong>Your payout:</strong>{" "}
+                    {formatMoney(booking.owner_payout, booking.currency)}
+                  </p>
+                  <p className="text-muted small mb-3">
+                    Platform fee:{" "}
+                    {formatMoney(booking.platform_fee, booking.currency)}
+                    {booking.latest_transaction?.owner_payout_status ===
+                      "RELEASED" && " · Payout released"}
                   </p>
                   {booking.notes && (
                     <p className="text-muted small mb-3">{booking.notes}</p>
                   )}
-                  {booking.status === "PENDING" && (
-                    <div className="d-flex gap-2">
+                  <div className="d-flex flex-wrap gap-2">
+                    {booking.status === "PENDING" && (
+                      <>
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleApprove(booking.pkid)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDecline(booking.pkid)}
+                        >
+                          Decline
+                        </Button>
+                      </>
+                    )}
+                    {booking.status === "PAID" && (
                       <Button
-                        variant="success"
+                        variant="outline-primary"
                         size="sm"
-                        onClick={() => handleApprove(booking.pkid)}
+                        onClick={() => handleActivate(booking.pkid)}
                       >
-                        Approve
+                        Start rental
                       </Button>
+                    )}
+                    {["PAID", "ACTIVE"].includes(booking.status) && (
                       <Button
-                        variant="outline-danger"
+                        variant="outline-secondary"
                         size="sm"
-                        onClick={() => handleDecline(booking.pkid)}
+                        onClick={() => handleComplete(booking.pkid)}
                       >
-                        Decline
+                        Complete trip
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </Card.Body>
               </Card>
             </Col>

@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { register, reset } from "../features/auth/authSlice";
 import Spinner from "./Spinner";
+import PasswordInput from "./PasswordInput";
 import "./Login.css";
 
 function Register() {
@@ -197,9 +198,8 @@ function Register() {
             )}
           </div>
           <div className="form-group">
-            <input
-              type="password"
-              className={`form-control ${errors.password ? 'error' : ''}`}
+            <PasswordInput
+              className={errors.password ? "error" : ""}
               id="password"
               name="password"
               value={password}
@@ -214,9 +214,8 @@ function Register() {
             )}
           </div>
           <div className="form-group">
-            <input
-              type="password"
-              className={`form-control ${errors.password2 ? 'error' : ''}`}
+            <PasswordInput
+              className={errors.password2 ? "error" : ""}
               id="password2"
               name="password2"
               value={password2}

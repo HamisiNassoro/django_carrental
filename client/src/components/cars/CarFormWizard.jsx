@@ -209,8 +209,8 @@ const CarFormWizard = ({
 						onChange={handleInputChange}
 					>
 						{CAR_TYPE_OPTIONS.map((type) => (
-							<option key={type} value={type}>
-								{type === "Sports Utility Vehicle(SUV)" ? "SUV" : type}
+							<option key={type.value} value={type.value}>
+								{type.label}
 							</option>
 						))}
 					</Form.Select>
@@ -255,7 +255,7 @@ const CarFormWizard = ({
 			<Col md={6}>
 				<Form.Group>
 					<Form.Label>
-						{formData.advert_type === "For Rent" ? "Daily Rate ($) *" : "Price ($) *"}
+						{formData.advert_type === "For Rent" ? "Daily Rate (KSh) *" : "Price (KSh) *"}
 					</Form.Label>
 					<Form.Control
 						type="number"
@@ -302,6 +302,21 @@ const CarFormWizard = ({
 					/>
 					<Form.Text className="text-muted">
 						Decimal format (0.15 = 15%)
+					</Form.Text>
+				</Form.Group>
+			</Col>
+			<Col md={6} className="d-flex align-items-center">
+				<Form.Group className="mb-0">
+					<Form.Check
+						type="switch"
+						id="is_available"
+						name="is_available"
+						label="Available for booking"
+						checked={formData.is_available}
+						onChange={handleInputChange}
+					/>
+					<Form.Text className="text-muted d-block">
+						Turn off to pause new requests. Existing bookings still block those dates.
 					</Form.Text>
 				</Form.Group>
 			</Col>

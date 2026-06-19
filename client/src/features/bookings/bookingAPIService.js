@@ -30,6 +30,16 @@ const cancelBooking = async (pkid) => {
   return response.data;
 };
 
+const activateBooking = async (pkid) => {
+  const response = await api.patch(`/bookings/${pkid}/activate/`);
+  return response.data;
+};
+
+const completeBooking = async (pkid) => {
+  const response = await api.patch(`/bookings/${pkid}/complete/`);
+  return response.data;
+};
+
 const bookingAPIService = {
   createBooking,
   getMyBookings,
@@ -37,6 +47,8 @@ const bookingAPIService = {
   approveBooking,
   declineBooking,
   cancelBooking,
+  activateBooking,
+  completeBooking,
 };
 
 export default bookingAPIService;

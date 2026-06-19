@@ -9,7 +9,7 @@ import {
   Form,
   Modal,
 } from "react-bootstrap";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
@@ -28,10 +28,13 @@ import {
   reset as resetBookings,
 } from "../features/bookings/bookingSlice";
 import { resolveCarImage, resolveMediaUrl } from "../utils/mediaUrl";
+import { formatDailyRate, formatMoney } from "../utils/currency";
 
 const CarDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const bookingSearch = location.state?.bookingSearch;
   const { car, isLoading, isError, message } = useSelector(
     (state) => state.cars
   );
@@ -76,6 +79,16 @@ const CarDetailPage = () => {
       dispatch(resetBookings());
     }
   }, [bookingError, bookingMessage, dispatch]);
+
+  useEffect(() => {
+    if (bookingSearch?.start_date && bookingSearch?.end_date) {
+      setBookingForm((prev) => ({
+        ...prev,
+        start_date: bookingSearch.start_date,
+        end_date: bookingSearch.end_date,
+      }));
+    }
+  }, [bookingSearch?.start_date, bookingSearch?.end_date]);
 
   const handleBookClick = () => {
     if (!user) {
@@ -139,6 +152,7 @@ const CarDetailPage = () => {
       : 0;
 
   const estimatedTotal = bookingDays * Number(car?.price || 0);
+  const currency = car?.currency || "KES";
 
   if (isLoading) {
     return <Spinner />;
@@ -184,9 +198,6 @@ const CarDetailPage = () => {
       value: car.published_status ? "Published" : "Draft",
     },
   ];
-
-  const numberWithCommas = (x) =>
-    x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
     <Container className="py-5" style={{ marginTop: "80px" }}>
@@ -242,7 +253,7 @@ const CarDetailPage = () => {
 
               <div className="mb-4">
                 <h3 className="fw-bold text-primary mb-2">
-                  ${numberWithCommas(Number(car.price))}
+                  {formatMoney(car.price, currency)}
                 </h3>
                 <small className="text-muted">per day</small>
               </div>
@@ -331,10 +342,10 @@ const CarDetailPage = () => {
               <div className="booking-summary p-3 rounded mb-3">
                 <div className="d-flex justify-content-between">
                   <span className="text-muted">
-                    {bookingDays} day{bookingDays !== 1 ? "s" : ""} × $
-                    {numberWithCommas(Number(car.price))}
+                    {bookingDays} day{bookingDays !== 1 ? "s" : ""} ×{" "}
+                    {formatMoney(car.price, currency)}
                   </span>
-                  <strong>${numberWithCommas(estimatedTotal)}</strong>
+                  <strong>{formatMoney(estimatedTotal, currency)}</strong>
                 </div>
               </div>
             )}

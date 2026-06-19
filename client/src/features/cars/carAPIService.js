@@ -1,8 +1,15 @@
 import api from "../../utils/axios";
 
 //get cars
-const getCars = async () => {
-	const response = await api.get("/cars/all/");
+const getCars = async (params = {}) => {
+	const searchParams = new URLSearchParams();
+	Object.entries(params).forEach(([key, value]) => {
+		if (value !== undefined && value !== null && value !== "") {
+			searchParams.append(key, String(value));
+		}
+	});
+	const query = searchParams.toString();
+	const response = await api.get(`/cars/all/${query ? `?${query}` : ""}`);
 	return response.data;
 };
 

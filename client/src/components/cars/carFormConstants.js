@@ -38,12 +38,12 @@ export const PHOTO_SLOTS = [
 ];
 
 export const CAR_TYPE_OPTIONS = [
-	"Sedan",
-	"Sports Utility Vehicle(SUV)",
-	"Hatchback",
-	"Luxury",
-	"Convertible",
-	"Van",
-	"Electric",
-	"Other",
+	{ value: "Sedan", label: "Sedan" },
+	{ value: "Sports Utility Vehicle(SUV)", label: "SUV" },
+	{ value: "Hatchback", label: "Hatchback" },
+	{ value: "Luxury", label: "Luxury" },
+	{ value: "Convertible", label: "Convertible" },
+	{ value: "Van", label: "Van" },
+	{ value: "Electric", label: "Electric" },
+	{ value: "Other", label: "Other" },
 ];

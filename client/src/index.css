@@ -415,6 +415,38 @@ a.btn.btn-primary:active {
 	font-weight: 500;
 }
 
+.cars-filter-bar {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 0.5rem;
+	overflow-x: auto;
+	padding-bottom: 0.25rem;
+	-webkit-overflow-scrolling: touch;
+}
+
+.cars-filter-chip {
+	border-radius: 999px;
+	padding: 0.4rem 1rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.cars-filter-badge {
+	font-weight: 500;
+	padding: 0.45rem 0.75rem;
+	border: 1px solid #dee2e6;
+}
+
+.cars-search-card {
+	border-radius: 12px;
+}
+
+.cars-page .page-title {
+	font-size: 2rem;
+}
+
 .btn-primary {
 	background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 	border: none;

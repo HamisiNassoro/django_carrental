@@ -10,6 +10,7 @@ import { getNearbyCars } from "../features/cars/carSlice";
 import locationAPIService from "../features/location/locationAPIService";
 import getCurrentPosition, { getDefaultCenter } from "../utils/geolocation";
 import { resolveCarImage } from "../utils/mediaUrl";
+import { formatDailyRate } from "../utils/currency";
 
 const NearbyPage = () => {
   const dispatch = useDispatch();
@@ -160,7 +161,7 @@ const NearbyPage = () => {
                           {car.car_type} · {car.city}
                         </p>
                         <div className="d-flex justify-content-between align-items-center">
-                          <strong>${Number(car.price).toLocaleString()}/day</strong>
+                          <strong>{formatDailyRate(car.price, car.currency || "KES")}</strong>
                           <Link to={`/car/${car.slug}`}>
                             <Button size="sm" variant="outline-primary">
                               View

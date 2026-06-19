@@ -4,6 +4,7 @@ import { FaBed, FaShower } from "react-icons/fa";
 import { GiStairs } from "react-icons/gi";
 import { Link } from "react-router-dom";
 import { resolveCarImage } from "../utils/mediaUrl";
+import { formatDailyRate } from "../utils/currency";
 
 const Car = ({ car }) => {
 	function numberWithCommas(x) {
@@ -22,7 +23,7 @@ const Car = ({ car }) => {
 				<Card.Img src={resolveCarImage(car.cover_photo)} variant="top" />
 			</Link>
 			<Card.Title className="car-price">
-				${numberWithCommas(Number(car.price))}
+				{formatDailyRate(car.price, car.currency || "KES")}
 			</Card.Title>
 			<Card.Body>
 				<Card.Title as="h4">

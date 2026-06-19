@@ -32,9 +32,9 @@ const initialState = {
 // get all cars
 export const getCars = createAsyncThunk(
 	"cars/getAll",
-	async (_, thunkAPI) => {
+	async (params = {}, thunkAPI) => {
 		try {
-			return await carAPIService.getCars();
+			return await carAPIService.getCars(params);
 		} catch (error) {
 			return thunkAPI.rejectWithValue(formatApiError(error));
 		}
