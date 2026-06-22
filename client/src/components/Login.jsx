@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { login, reset } from "../features/auth/authSlice";
 import Spinner from "./Spinner";
 import PasswordInput from "./PasswordInput";
+import PhoneLoginForm from "./PhoneLoginForm";
 import "./Login.css";
 
 function Login() {
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "phone" ? "phone" : "email";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { email, password } = formData;
-
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-
   const { isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
@@ -35,27 +36,23 @@ function Login() {
 
     if (isSuccess) {
       toast.success("Login successful! Welcome back!");
-      const redirectTo = location.state?.from || "/";
-      navigate(redirectTo);
+      navigate(location.state?.from || "/");
       dispatch(reset());
     }
   }, [isError, isSuccess, message, navigate, dispatch, location.state]);
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!email) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Please enter a valid email address";
     }
-
     if (!password) {
       newErrors.password = "Password is required";
     } else if (password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -66,27 +63,16 @@ function Login() {
       ...prevState,
       [name]: value,
     }));
-
-    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-
     if (validateForm()) {
       setIsSubmitting(true);
-      const userData = {
-        email,
-        password,
-      };
-
-      dispatch(login(userData));
+      dispatch(login({ email, password }));
     }
   };
 
@@ -98,67 +84,76 @@ function Login() {
     <>
       <section className="heading">
         <h1>Welcome Back</h1>
-        <p>Sign in to access your account</p>
+        <p>Sign in with email or phone</p>
       </section>
 
       <section className="form">
-        <form onSubmit={onSubmit}>
-          <div className="form-group">
-            <input
-              type="email"
-              className={`form-control ${errors.email ? 'error' : ''}`}
-              id="email"
-              name="email"
-              value={email}
-              placeholder="Enter your email address"
-              onChange={onChange}
-              required
-            />
-            {errors.email && (
-              <small style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
-                {errors.email}
-              </small>
-            )}
-          </div>
-          <div className="form-group">
-            <PasswordInput
-              className={errors.password ? "error" : ""}
-              id="password"
-              name="password"
-              value={password}
-              placeholder="Enter your password"
-              onChange={onChange}
-              required
-            />
-            {errors.password && (
-              <small style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
-                {errors.password}
-              </small>
-            )}
-          </div>
-          <div className="form-group">
-            <button
-              type="submit"
-              className="btn btn-block"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Signing In..." : "Sign In"}
-            </button>
-          </div>
-          <div className="form-group text-center">
+        <div className="login-tabs mb-4">
+          <button
+            type="button"
+            className={`login-tab ${activeTab === "email" ? "active" : ""}`}
+            onClick={() => setActiveTab("email")}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            className={`login-tab ${activeTab === "phone" ? "active" : ""}`}
+            onClick={() => setActiveTab("phone")}
+          >
+            Phone (OTP)
+          </button>
+        </div>
+
+        {activeTab === "email" ? (
+          <form onSubmit={onSubmit}>
+            <div className="form-group">
+              <input
+                type="email"
+                className={`form-control ${errors.email ? "error" : ""}`}
+                id="email"
+                name="email"
+                value={email}
+                placeholder="Enter your email address"
+                onChange={onChange}
+                required
+              />
+              {errors.email && (
+                <small className="field-error">{errors.email}</small>
+              )}
+            </div>
+            <div className="form-group">
+              <PasswordInput
+                className={errors.password ? "error" : ""}
+                id="password"
+                name="password"
+                value={password}
+                placeholder="Enter your password"
+                onChange={onChange}
+                required
+              />
+              {errors.password && (
+                <small className="field-error">{errors.password}</small>
+              )}
+            </div>
+            <div className="form-group">
+              <button type="submit" className="btn btn-block" disabled={isSubmitting}>
+                {isSubmitting ? "Signing In..." : "Sign In"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <PhoneLoginForm />
+        )}
+
+        <div className="form-group text-center">
             <p>
-              Don&apos;t have an account?{" "}
-              <Link to="/register" style={{ color: "#667eea", textDecoration: "none", fontWeight: "600" }}>
-                Create one here
-              </Link>
-            </p>
-            <p className="mt-2 mb-0">
-              <Link to="/login/phone" style={{ color: "#667eea", textDecoration: "none", fontWeight: 600 }}>
-                Sign in with phone (OTP)
-              </Link>
-            </p>
-          </div>
-        </form>
+            Don&apos;t have an account?{" "}
+            <Link to="/register">Create one with email</Link>
+            {" "}
+            or use the Phone tab — we&apos;ll create your account when you verify your number.
+          </p>
+        </div>
       </section>
     </>
   );

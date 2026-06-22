@@ -66,9 +66,13 @@ const verifyPhoneOtp = async ({
   setTokens(access, refresh);
   if (response.data.user) {
     setUser(response.data.user);
-    return response.data.user;
+    return {
+      ...response.data.user,
+      is_new_user: response.data.is_new_user,
+    };
   }
-  return fetchCurrentUser();
+  const user = await fetchCurrentUser();
+  return { ...user, is_new_user: response.data.is_new_user };
 };
 
 const login = async (userData) => loginWithCredentials(userData);
@@ -116,6 +120,7 @@ const authService = {
   getToken,
   getRefreshToken,
   setTokens,
+  setUser,
   clearAuth,
 };
 

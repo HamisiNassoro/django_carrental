@@ -9,6 +9,7 @@ from apps.common.phone import parse_kenya_phone, phone_lookup_variants
 from apps.profiles.models import Profile
 
 from .models import User
+from .otp_email import is_placeholder_email, send_otp_email
 from .otp_models import OTP, OTPAttempt, OTPType
 from .textsms_service import textsms_service
 
@@ -56,6 +57,15 @@ def create_user_for_phone(phone: str, first_name: str = "", last_name: str = "")
     return user
 
 
+def _should_mock_otp() -> bool:
+    if getattr(settings, "MOCK_OTP", True):
+        return True
+    if textsms_service._is_configured():
+        return False
+    logger.warning("TextSMS not configured — OTP codes will be logged to the console only")
+    return True
+
+
 class OTPService:
     def _in_cooldown(self, phone_number: str, otp_type: str) -> bool:
         cooldown_seconds = getattr(settings, "OTP_COOLDOWN_SECONDS", 60)
@@ -70,7 +80,7 @@ class OTPService:
 
     def _send_sms(self, otp: OTP) -> dict:
         app_name = getattr(settings, "SITE_NAME", "Car Rental")
-        if getattr(settings, "MOCK_OTP", True):
+        if _should_mock_otp():
             logger.info(
                 "[MOCK OTP] phone=%s code=%s (valid %s min)",
                 otp.phone_number,
@@ -83,6 +93,20 @@ class OTPService:
         if result.get("success"):
             return {"success": True, "provider": "textsms"}
         return {"success": False, "message": result.get("error", "Failed to send SMS")}
+
+    def _send_email(self, otp: OTP, user: User | None, otp_type: str) -> dict:
+        if not user or is_placeholder_email(user.email):
+            return {"success": False, "skipped": True}
+
+        if _should_mock_otp() and not getattr(settings, "OTP_EMAIL_WHEN_MOCK", False):
+            logger.info("[MOCK OTP] email=%s code=%s", user.email, otp.otp_code)
+            return {"success": True, "provider": "mock"}
+
+        purpose = "registration" if otp_type == OTPType.REGISTRATION else "login"
+        result = send_otp_email(email=user.email, otp_code=otp.otp_code, purpose=purpose)
+        if result.get("success"):
+            return {"success": True, "provider": "smtp"}
+        return {"success": False, "message": result.get("error", "Failed to send email")}
 
     def send_phone_otp(
         self,
@@ -107,16 +131,21 @@ class OTPService:
             otp_type=otp_type,
             user=user,
             ip_address=ip_address,
-            user_agent=user_agent,
+            user_agent=user_agent or "",
             metadata=metadata,
         )
 
-        send_result = self._send_sms(otp)
-        if not send_result.get("success"):
+        sms_result = self._send_sms(otp)
+        email_result = self._send_email(otp, user, otp_type)
+
+        sms_sent = sms_result.get("success")
+        email_sent = email_result.get("success") and not email_result.get("skipped")
+
+        if not sms_sent and not email_sent:
             otp.delete()
             return {
                 "success": False,
-                "message": send_result.get("message", "Could not send verification code"),
+                "message": sms_result.get("message", "Could not send verification code"),
             }
 
         payload = {
@@ -126,10 +155,19 @@ class OTPService:
             "expires_at": otp.expires_at.isoformat(),
             "is_new_user": user is None,
             "phone_number": normalized_phone,
-            "requires_profile": user is None,
+            "delivery_methods": {
+                "sms": {"sent": sms_sent},
+                "email": {"sent": email_sent, "address": user.email if email_sent else None},
+            },
         }
-        if getattr(settings, "MOCK_OTP", True):
+        if _should_mock_otp():
             payload["dev_hint"] = "Check the Django server console for your code in development"
+        elif email_sent and sms_sent:
+            payload["message"] = "Verification code sent to your phone and email"
+        elif email_sent:
+            payload["message"] = "Verification code sent to your email"
+        else:
+            payload["message"] = "Verification code sent to your phone"
         return payload
 
     def verify_phone_otp(
@@ -163,19 +201,26 @@ class OTPService:
             return {"success": False, "message": message}
 
         user = otp.user
+        created = False
         if not user:
             user = create_user_for_phone(
                 normalized_phone,
                 first_name=first_name or (otp.metadata or {}).get("first_name", ""),
                 last_name=last_name or (otp.metadata or {}).get("last_name", ""),
             )
+            created = True
         else:
             profile = user.profile
             if not profile.phone_number:
                 profile.phone_number = normalized_phone
                 profile.save(update_fields=["phone_number", "updated_at"])
 
-        return {"success": True, "message": "Phone verified", "user": user}
+        return {
+            "success": True,
+            "message": "Phone verified",
+            "user": user,
+            "is_new_user": created,
+        }
 
 
 otp_service = OTPService()

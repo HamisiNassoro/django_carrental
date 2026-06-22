@@ -9,6 +9,7 @@ const PasswordInput = ({
   placeholder,
   className = "",
   required = false,
+  autoComplete = "new-password",
 }) => {
   const [visible, setVisible] = useState(false);
 
@@ -23,7 +24,7 @@ const PasswordInput = ({
         placeholder={placeholder}
         onChange={onChange}
         required={required}
-        autoComplete={name === "password2" ? "new-password" : undefined}
+        autoComplete={autoComplete}
       />
       <button
         type="button"

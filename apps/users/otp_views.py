@@ -59,6 +59,7 @@ class PhoneOTPVerifyView(APIView):
             {
                 "success": True,
                 "message": "Login successful",
+                "is_new_user": result.get("is_new_user", False),
                 "user": UserSerializer(user).data,
                 "tokens": {
                     "access": str(refresh.access_token),

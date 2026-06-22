@@ -4,8 +4,10 @@ from rest_framework.views import APIView
 
 from .exceptions import NotYourProfile, ProfileNotFound
 from .models import Profile
+from .credentials_serializers import LinkEmailPasswordSerializer
 from .renderers import ProfileJSONRenderer
 from .serializers import ProfileSerializer, UpdateProfileSerializer
+from apps.users.serializers import UserSerializer
 
 # Create your views here.
 
@@ -77,5 +79,27 @@ class UpdateProfileAPIView(APIView):
         )
 
         serializer.is_valid()
+        if serializer.errors:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LinkEmailPasswordAPIView(APIView):
+    """Let phone-OTP users add a real email and password for email login."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = LinkEmailPasswordSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {
+                "message": "Email login enabled. You can sign in with email or phone.",
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
