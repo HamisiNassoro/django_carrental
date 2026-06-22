@@ -53,6 +53,7 @@ urlpatterns = [
     # API endpoints
     path("api/v1/auth/", include("djoser.urls")),
     path("api/v1/auth/", include("djoser.urls.jwt")),
+    path("api/v1/auth/", include("apps.users.otp_urls")),
     path("api/profile/", include("apps.profiles.urls")),
     path("api/cars/", include("apps.cars.urls")),
     path("api/ratings/", include("apps.ratings.urls")),

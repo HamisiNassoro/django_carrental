@@ -83,14 +83,112 @@ def initiate_stk_push(*, phone_number: str, amount: Decimal, account_reference: 
         "TransactionDesc": description[:13],
     }
 
-    response = requests.post(
-        f"{_mpesa_base_url()}/mpesa/stkpush/v1/processrequest",
-        headers={"Authorization": f"Bearer {token}"},
-        json=payload,
-        timeout=30,
-    )
-    response.raise_for_status()
+    try:
+        response = requests.post(
+            f"{_mpesa_base_url()}/mpesa/stkpush/v1/processrequest",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        try:
+            detail = exc.response.json()
+        except Exception:
+            detail = exc.response.text if exc.response is not None else str(exc)
+        logger.error("M-Pesa STK push failed: %s", detail)
+        raise MpesaError(f"M-Pesa STK push failed: {detail}") from exc
+    except requests.RequestException as exc:
+        logger.error("M-Pesa STK push request error: %s", exc)
+        raise MpesaError(f"M-Pesa STK push request failed: {exc}") from exc
+
     data = response.json()
+    if data.get("ResponseCode") != "0":
+        raise MpesaError(
+            data.get("ResponseDescription")
+            or data.get("errorMessage")
+            or "M-Pesa rejected the STK push request"
+        )
+    data["provider"] = "MPESA"
+    return data
+
+
+def _should_mock_b2c() -> bool:
+    if getattr(settings, "MOCK_B2C", True):
+        return True
+    if getattr(settings, "MOCK_MPESA", True):
+        return True
+    security_credential = getattr(settings, "MPESA_SECURITY_CREDENTIAL", "")
+    result_url = getattr(settings, "MPESA_B2C_RESULT_URL", "")
+    timeout_url = getattr(settings, "MPESA_B2C_TIMEOUT_URL", "")
+    if not all([security_credential, result_url, timeout_url]):
+        if getattr(settings, "MPESA_ENV", "sandbox") == "sandbox":
+            logger.warning(
+                "B2C credentials missing in sandbox — using mock owner payout"
+            )
+            return True
+    return False
+
+
+def initiate_b2c_payout(*, phone_number: str, amount: Decimal, remarks: str):
+    if _should_mock_b2c():
+        receipt = f"MOCKB2C{int(amount)}"
+        return {
+            "provider": "MOCK",
+            "ResponseCode": "0",
+            "ResponseDescription": "Mock B2C payout accepted (dev/sandbox)",
+            "ConversationID": f"mock-b2c-{normalize_phone_number(phone_number)}",
+            "TransactionReceipt": receipt,
+        }
+
+    security_credential = settings.MPESA_SECURITY_CREDENTIAL
+    result_url = settings.MPESA_B2C_RESULT_URL
+    timeout_url = settings.MPESA_B2C_TIMEOUT_URL
+    if not all([security_credential, result_url, timeout_url]):
+        raise MpesaError(
+            "M-Pesa B2C settings are incomplete (security credential and callback URLs required)"
+        )
+
+    token = get_access_token()
+    payload = {
+        "InitiatorName": settings.MPESA_INITIATOR_NAME,
+        "SecurityCredential": security_credential,
+        "CommandID": "BusinessPayment",
+        "Amount": int(Decimal(amount)),
+        "PartyA": settings.MPESA_B2C_SHORTCODE,
+        "PartyB": normalize_phone_number(phone_number),
+        "Remarks": remarks[:100],
+        "QueueTimeOutURL": timeout_url,
+        "ResultURL": result_url,
+        "Occasion": "Rental payout",
+    }
+
+    try:
+        response = requests.post(
+            f"{_mpesa_base_url()}/mpesa/b2c/v1/paymentrequest",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        try:
+            detail = exc.response.json()
+        except Exception:
+            detail = exc.response.text if exc.response is not None else str(exc)
+        logger.error("M-Pesa B2C payout failed: %s", detail)
+        raise MpesaError(f"M-Pesa B2C payout failed: {detail}") from exc
+    except requests.RequestException as exc:
+        logger.error("M-Pesa B2C request error: %s", exc)
+        raise MpesaError(f"M-Pesa B2C request failed: {exc}") from exc
+
+    data = response.json()
+    if data.get("ResponseCode") != "0":
+        raise MpesaError(
+            data.get("ResponseDescription")
+            or data.get("errorMessage")
+            or "M-Pesa rejected the B2C payout request"
+        )
     data["provider"] = "MPESA"
     return data
 

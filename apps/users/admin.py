@@ -4,6 +4,21 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import User
+from .otp_models import OTP, OTPAttempt
+
+
+@admin.register(OTP)
+class OTPAdmin(admin.ModelAdmin):
+    list_display = ["id", "phone_number", "otp_type", "is_used", "attempts", "created_at", "expires_at"]
+    list_filter = ["otp_type", "is_used"]
+    search_fields = ["phone_number", "otp_code"]
+    readonly_fields = ["otp_code", "created_at", "expires_at", "verified_at"]
+
+
+@admin.register(OTPAttempt)
+class OTPAttemptAdmin(admin.ModelAdmin):
+    list_display = ["id", "otp", "is_successful", "ip_address", "created_at"]
+    list_filter = ["is_successful"]
 
 
 class UserAdmin(BaseUserAdmin):

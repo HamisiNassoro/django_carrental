@@ -29,6 +29,11 @@ class BookingSerializer(serializers.ModelSerializer):
             "owner_payout",
             "status",
             "notes",
+            "approved_at",
+            "payment_due_at",
+            "paid_at",
+            "activated_at",
+            "completed_at",
             "created_at",
             "updated_at",
         ]
@@ -38,6 +43,11 @@ class BookingSerializer(serializers.ModelSerializer):
             "currency",
             "platform_fee",
             "owner_payout",
+            "approved_at",
+            "payment_due_at",
+            "paid_at",
+            "activated_at",
+            "completed_at",
             "created_at",
             "updated_at",
         ]
@@ -101,4 +111,7 @@ class BookingDetailSerializer(BookingSerializer):
             "owner_payout": transaction.owner_payout,
             "mpesa_receipt_number": transaction.mpesa_receipt_number,
             "owner_payout_status": transaction.owner_payout_status,
+            "owner_payout_phone": transaction.owner_payout_phone,
+            "owner_payout_mpesa_receipt": transaction.owner_payout_mpesa_receipt,
+            "owner_payout_at": transaction.owner_payout_at,
         }

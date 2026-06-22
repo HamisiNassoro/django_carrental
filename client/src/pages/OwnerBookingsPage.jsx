@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Badge, Button, Card, Col, Container, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 import {
@@ -8,6 +9,10 @@ import {
   bookingStatusVariant,
   formatMoney,
 } from "../utils/currency";
+import {
+  getCompleteTripToast,
+  getPayoutStatusLabel,
+} from "../utils/payoutMessages";
 import {
   activateBooking,
   approveBooking,
@@ -68,7 +73,8 @@ const OwnerBookingsPage = () => {
   const handleComplete = async (pkid) => {
     const result = await dispatch(completeBooking(pkid));
     if (completeBooking.fulfilled.match(result)) {
-      toast.success(result.payload?.message || "Trip completed");
+      const { type, message } = getCompleteTripToast(result.payload?.owner_payout);
+      toast[type](message);
       dispatch(getOwnerBookings());
     } else {
       toast.error(result.payload || "Could not complete trip");
@@ -82,8 +88,12 @@ const OwnerBookingsPage = () => {
       <Row className="mb-4">
         <Col>
           <h1 className="fw-bold page-title">Rental Requests</h1>
-          <p className="text-muted">
-            Approve requests, then receive payout after the trip completes
+          <p className="text-muted mb-4">
+            Approve requests, then receive payout after the trip completes.
+            {" "}
+            <Link to="/profile" className="text-decoration-none">
+              Set your M-Pesa payout number
+            </Link>
           </p>
         </Col>
       </Row>
@@ -127,9 +137,23 @@ const OwnerBookingsPage = () => {
                   <p className="text-muted small mb-3">
                     Platform fee:{" "}
                     {formatMoney(booking.platform_fee, booking.currency)}
-                    {booking.latest_transaction?.owner_payout_status ===
-                      "RELEASED" && " · Payout released"}
+                    {(() => {
+                      const payoutLabel = getPayoutStatusLabel(
+                        booking.latest_transaction
+                      );
+                      return payoutLabel ? <> · Payout {payoutLabel}</> : null;
+                    })()}
                   </p>
+                  {booking.paid_at && (
+                    <p className="text-muted small mb-2">
+                      Renter paid: {new Date(booking.paid_at).toLocaleString()}
+                    </p>
+                  )}
+                  {booking.activated_at && (
+                    <p className="text-muted small mb-2">
+                      Rental started: {new Date(booking.activated_at).toLocaleString()}
+                    </p>
+                  )}
                   {booking.notes && (
                     <p className="text-muted small mb-3">{booking.notes}</p>
                   )}

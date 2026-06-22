@@ -6,6 +6,8 @@ const AUTH_SKIP_REDIRECT_PATHS = [
   "/v1/auth/jwt/create/",
   "/v1/auth/jwt/refresh/",
   "/v1/auth/users/",
+  "/v1/auth/otp/send/",
+  "/v1/auth/otp/verify/",
 ];
 
 const api = axios.create({
@@ -44,7 +46,8 @@ api.interceptors.response.use(
 
         const isAuthPage =
           window.location.pathname === "/login" ||
-          window.location.pathname === "/register";
+          window.location.pathname === "/register" ||
+          window.location.pathname === "/login/phone";
 
         if (!isAuthPage) {
           window.location.href = "/login";

@@ -33,6 +33,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             "owner_payout_status",
             "mpesa_receipt_number",
             "failure_reason",
+            "owner_payout_phone",
+            "owner_payout_mpesa_receipt",
+            "owner_payout_at",
             "created_at",
             "updated_at",
         ]

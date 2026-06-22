@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Header from "./components/Header";
 import NotFound from "./components/NotFound";
 import Login from "./components/Login";
+import PhoneLogin from "./components/PhoneLogin";
 import Register from "./components/Register";
 import AuthTest from "./components/AuthTest";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -19,6 +20,7 @@ import EditCarPage from "./pages/EditCarPage";
 import MyBookingsPage from "./pages/MyBookingsPage";
 import OwnerBookingsPage from "./pages/OwnerBookingsPage";
 import NearbyPage from "./pages/NearbyPage";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import ContactUsPage from "./pages/ContactUsPage";
 
@@ -31,6 +33,7 @@ const App = () => {
 					<Routes>
 						<Route path="/" element={<HomePage />} />
 						<Route path="/login" element={<Login />} />
+						<Route path="/login/phone" element={<PhoneLogin />} />
 						<Route path="/register" element={<Register />} />
 						<Route path="/auth-test" element={<AuthTest />} />
 						<Route path="/cars" element={<CarsPage />} />
@@ -73,6 +76,14 @@ const App = () => {
 							element={
 								<ProtectedRoute>
 									<OwnerBookingsPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/profile"
+							element={
+								<ProtectedRoute>
+									<ProfileSettingsPage />
 								</ProtectedRoute>
 							}
 						/>

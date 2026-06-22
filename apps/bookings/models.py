@@ -41,6 +41,11 @@ class Booking(TimeStampedUUIDModel):
         max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING
     )
     notes = models.TextField(blank=True, null=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+    payment_due_at = models.DateTimeField(blank=True, null=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
+    activated_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]

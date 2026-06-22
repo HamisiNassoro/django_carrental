@@ -22,6 +22,12 @@ class Profile(TimeStampedUUIDModel):
     phone_number = PhoneNumberField(
         verbose_name=_("Phone Number"), max_length=30, default="+41524204242"
     )
+    mpesa_payout_number = models.CharField(
+        verbose_name=_("M-Pesa payout number"),
+        max_length=20,
+        blank=True,
+        help_text=_("Kenyan M-Pesa number for owner payouts (e.g. 2547XXXXXXXX)"),
+    )
     about_me = models.TextField(
         verbose_name=_("About me"), default="say something about yourself"
     )

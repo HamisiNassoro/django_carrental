@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { formatMoney } from "../utils/currency";
 
-const PayBookingModal = ({ show, onHide, booking, onPay, isPaying }) => {
+const PayBookingModal = ({ show, onHide, booking, onPay, isPaying, defaultPhone = "" }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
+
+  useEffect(() => {
+    if (show) {
+      setPhoneNumber(defaultPhone || "");
+    }
+  }, [show, defaultPhone]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,6 +29,11 @@ const PayBookingModal = ({ show, onHide, booking, onPay, isPaying }) => {
             Complete payment for{" "}
             <strong>{booking.car_detail?.title || booking.car}</strong>
           </p>
+          {booking.payment_due_at && (
+            <p className="small text-warning mb-3">
+              Pay before {new Date(booking.payment_due_at).toLocaleString()}
+            </p>
+          )}
           <div className="booking-summary p-3 rounded mb-3">
             <div className="d-flex justify-content-between mb-2">
               <span>Rental total</span>
@@ -43,8 +54,8 @@ const PayBookingModal = ({ show, onHide, booking, onPay, isPaying }) => {
               required
             />
             <Form.Text className="text-muted">
-              In development mode (MOCK_MPESA), payment completes instantly without
-              a real STK push.
+              STK push is sent to this number. Use your profile phone or enter another
+              M-Pesa line.
             </Form.Text>
           </Form.Group>
         </Modal.Body>

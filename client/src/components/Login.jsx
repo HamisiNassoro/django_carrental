@@ -147,9 +147,14 @@ function Login() {
           </div>
           <div className="form-group text-center">
             <p>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link to="/register" style={{ color: "#667eea", textDecoration: "none", fontWeight: "600" }}>
                 Create one here
+              </Link>
+            </p>
+            <p className="mt-2 mb-0">
+              <Link to="/login/phone" style={{ color: "#667eea", textDecoration: "none", fontWeight: 600 }}>
+                Sign in with phone (OTP)
               </Link>
             </p>
           </div>

@@ -25,6 +25,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "email",
             "id",
             "phone_number",
+            "mpesa_payout_number",
             "profile_photo",
             "about_me",
             "license",
@@ -63,6 +64,7 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             "phone_number",
+            "mpesa_payout_number",
             "profile_photo",
             "about_me",
             "license",

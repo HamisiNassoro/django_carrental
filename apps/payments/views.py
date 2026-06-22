@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.db import transaction as db_transaction
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
@@ -22,8 +23,10 @@ def _mark_payment_success(transaction: Transaction, receipt_number: str = ""):
     transaction.save(update_fields=["status", "mpesa_receipt_number", "updated_at"])
 
     booking = transaction.booking
+    now = timezone.now()
     booking.status = BookingStatus.PAID
-    booking.save(update_fields=["status", "updated_at"])
+    booking.paid_at = now
+    booking.save(update_fields=["status", "paid_at", "updated_at"])
 
 
 @api_view(["POST"])
@@ -49,16 +52,32 @@ def initiate_booking_payment(request, pkid):
     existing = (
         Transaction.objects.filter(
             booking=booking,
-            status__in=[TransactionStatus.PENDING, TransactionStatus.PROCESSING, TransactionStatus.COMPLETED],
+            status__in=[
+                TransactionStatus.PENDING,
+                TransactionStatus.PROCESSING,
+                TransactionStatus.COMPLETED,
+            ],
         )
         .order_by("-created_at")
         .first()
     )
-    if existing and existing.status == TransactionStatus.COMPLETED:
+    if (
+        existing
+        and existing.status == TransactionStatus.COMPLETED
+        and booking.status != BookingStatus.AWAITING_PAYMENT
+    ):
         return Response(
             {"detail": "Booking is already paid", "transaction": TransactionSerializer(existing).data},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    if existing and existing.status in (
+        TransactionStatus.PENDING,
+        TransactionStatus.PROCESSING,
+    ):
+        existing.status = TransactionStatus.FAILED
+        existing.failure_reason = "Superseded by new payment attempt"
+        existing.save(update_fields=["status", "failure_reason", "updated_at"])
 
     platform_fee, owner_payout = calculate_fees(booking.total_price)
     provider = PaymentProvider.MOCK if getattr(settings, "MOCK_MPESA", True) else PaymentProvider.MPESA

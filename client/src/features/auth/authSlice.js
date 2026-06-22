@@ -64,6 +64,17 @@ export const login = createAsyncThunk("auth/login", async (user, thunkAPI) => {
   }
 });
 
+export const loginWithPhone = createAsyncThunk(
+  "auth/loginWithPhone",
+  async (payload, thunkAPI) => {
+    try {
+      return await authService.verifyPhoneOtp(payload);
+    } catch (error) {
+      return thunkAPI.rejectWithValue(formatApiError(error));
+    }
+  }
+);
+
 export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, thunkAPI) => {
@@ -146,6 +157,21 @@ export const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.user = null;
+      })
+      .addCase(loginWithPhone.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+      })
+      .addCase(loginWithPhone.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload;
+      })
+      .addCase(loginWithPhone.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

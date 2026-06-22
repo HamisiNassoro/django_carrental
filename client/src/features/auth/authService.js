@@ -40,6 +40,37 @@ const loginWithCredentials = async ({ email, password }) => {
   return fetchCurrentUser();
 };
 
+const requestPhoneOtp = async (phoneNumber) => {
+  const response = await api.post("/v1/auth/otp/send/", { phone_number: phoneNumber });
+  return response.data;
+};
+
+const verifyPhoneOtp = async ({
+  phoneNumber,
+  otpCode,
+  otpId,
+  firstName = "",
+  lastName = "",
+}) => {
+  const response = await api.post("/v1/auth/otp/verify/", {
+    phone_number: phoneNumber,
+    otp_code: otpCode,
+    otp_id: otpId,
+    first_name: firstName,
+    last_name: lastName,
+  });
+  const { access, refresh } = response.data.tokens || {};
+  if (!access) {
+    throw new Error("Login failed: no access token received");
+  }
+  setTokens(access, refresh);
+  if (response.data.user) {
+    setUser(response.data.user);
+    return response.data.user;
+  }
+  return fetchCurrentUser();
+};
+
 const login = async (userData) => loginWithCredentials(userData);
 
 const logout = () => {
@@ -80,6 +111,8 @@ const authService = {
   getCurrentUser,
   register,
   refreshAccessToken,
+  requestPhoneOtp,
+  verifyPhoneOtp,
   getToken,
   getRefreshToken,
   setTokens,

@@ -166,7 +166,14 @@ AUTH_USER_MODEL = "users.User"  ###Telling django the location of our CustomUser
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    )
+    ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/hour",
+        "login": "5/30s",
+    },
 }
 
 ### configuring SIMPLE_JWT
@@ -265,10 +272,33 @@ logging.config.dictConfig(
 
 # Payments / M-Pesa
 PLATFORM_COMMISSION_RATE = env("PLATFORM_COMMISSION_RATE", default="0.10")
+PAYMENT_DUE_HOURS = env.int("PAYMENT_DUE_HOURS", default=24)
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 MOCK_MPESA = env.bool("MOCK_MPESA", default=True)
+MOCK_B2C = env.bool("MOCK_B2C", default=True)
 MPESA_CONSUMER_KEY = env("MPESA_CONSUMER_KEY", default="")
 MPESA_CONSUMER_SECRET = env("MPESA_CONSUMER_SECRET", default="")
 MPESA_SHORTCODE = env("MPESA_SHORTCODE", default="174379")
 MPESA_PASSKEY = env("MPESA_PASSKEY", default="")
 MPESA_CALLBACK_URL = env("MPESA_CALLBACK_URL", default="")
 MPESA_ENV = env("MPESA_ENV", default="sandbox")
+MPESA_B2C_SHORTCODE = env("MPESA_B2C_SHORTCODE", default="600992")
+MPESA_INITIATOR_NAME = env("MPESA_INITIATOR_NAME", default="testapi")
+MPESA_SECURITY_CREDENTIAL = env("MPESA_SECURITY_CREDENTIAL", default="")
+MPESA_B2C_RESULT_URL = env("MPESA_B2C_RESULT_URL", default="")
+MPESA_B2C_TIMEOUT_URL = env("MPESA_B2C_TIMEOUT_URL", default="")
+
+# Phone OTP auth (TextSMS — same provider as schooltransit)
+SITE_NAME = env("SITE_NAME", default="Car Rental")
+MOCK_OTP = env.bool("MOCK_OTP", default=True)
+OTP_EXPIRY_MINUTES = env.int("OTP_EXPIRY_MINUTES", default=10)
+OTP_COOLDOWN_SECONDS = env.int("OTP_COOLDOWN_SECONDS", default=60)
+OTP_MAX_ATTEMPTS = env.int("OTP_MAX_ATTEMPTS", default=5)
+OTP_CODE_LENGTH = env.int("OTP_CODE_LENGTH", default=6)
+TEXT_SMS_API = env("TEXT_SMS_API", default="")
+TEXT_SMS_PARTNER_ID = env("TEXT_SMS_PARTNER_ID", default="")
+TEXT_SMS_SHORTCODE = env("TEXT_SMS_SHORTCODE", default="")
+TEXT_SMS_URL = env(
+    "TEXT_SMS_URL",
+    default="https://sms.textsms.co.ke/api/services/sendsms/",
+)

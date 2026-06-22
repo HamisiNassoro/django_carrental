@@ -1,13 +1,17 @@
-from datetime import date
+from datetime import date, timedelta
 
+from django.conf import settings
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from apps.payments.models import OwnerPayoutStatus, Transaction, TransactionStatus
+from apps.payments.models import Transaction, TransactionStatus
+from apps.payments.payouts import release_owner_payout
+from .notifications import notify_renter_booking_approved
 from .models import Booking, BookingStatus
 from .serializers import BookingDetailSerializer, BookingSerializer
+from .services import expire_overdue_bookings
 
 
 class BookingCreateAPIView(generics.CreateAPIView):
@@ -20,7 +24,11 @@ class MyBookingsListAPIView(generics.ListAPIView):
     serializer_class = BookingDetailSerializer
 
     def get_queryset(self):
+        expire_overdue_bookings()
         return Booking.objects.filter(renter=self.request.user).select_related("car")
+
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class OwnerBookingsListAPIView(generics.ListAPIView):
@@ -28,6 +36,7 @@ class OwnerBookingsListAPIView(generics.ListAPIView):
     serializer_class = BookingDetailSerializer
 
     def get_queryset(self):
+        expire_overdue_bookings()
         return Booking.objects.filter(car__user=self.request.user).select_related("car")
 
 
@@ -46,7 +55,9 @@ class BookingDetailAPIView(generics.RetrieveAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def approve_booking(request, pkid):
     try:
-        booking = Booking.objects.select_related("car").get(pkid=pkid, car__user=request.user)
+        booking = Booking.objects.select_related("car", "renter").get(
+            pkid=pkid, car__user=request.user
+        )
     except Booking.DoesNotExist:
         return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -56,11 +67,23 @@ def approve_booking(request, pkid):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    now = timezone.now()
+    due_hours = getattr(settings, "PAYMENT_DUE_HOURS", 24)
     booking.status = BookingStatus.AWAITING_PAYMENT
-    booking.save(update_fields=["status"])
+    booking.approved_at = now
+    booking.payment_due_at = now + timedelta(hours=due_hours)
+    booking.save(
+        update_fields=["status", "approved_at", "payment_due_at", "updated_at"]
+    )
+
+    email_sent = notify_renter_booking_approved(booking)
+
     return Response(
         {
             "status": booking.status,
+            "approved_at": booking.approved_at,
+            "payment_due_at": booking.payment_due_at,
+            "email_sent": email_sent,
             "message": "Booking approved. Renter will be prompted to pay via M-Pesa.",
         }
     )
@@ -106,12 +129,13 @@ def cancel_booking(request, pkid):
 @permission_classes([permissions.IsAuthenticated])
 def complete_booking(request, pkid):
     try:
-        booking = Booking.objects.select_related("car").get(pkid=pkid)
+        booking = Booking.objects.select_related("car", "car__user").get(pkid=pkid)
     except Booking.DoesNotExist:
         return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
     user = request.user
-    if booking.renter_id != user.id and booking.car.user_id != user.id:
+    user_pk = user.pkid
+    if booking.renter_id != user_pk and booking.car.user_id != user_pk:
         return Response({"detail": "Not allowed"}, status=status.HTTP_403_FORBIDDEN)
 
     if booking.status not in [BookingStatus.PAID, BookingStatus.ACTIVE]:
@@ -120,29 +144,34 @@ def complete_booking(request, pkid):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    if booking.end_date > date.today() and booking.renter_id != user.id:
+    if booking.end_date > date.today() and booking.renter_id != user_pk:
         return Response(
             {"detail": "Trip can be completed after the end date"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    now = timezone.now()
     booking.status = BookingStatus.COMPLETED
-    booking.save(update_fields=["status"])
+    booking.completed_at = now
+    booking.save(update_fields=["status", "completed_at", "updated_at"])
 
     payment_txn = (
         booking.transactions.filter(status=TransactionStatus.COMPLETED)
         .order_by("-created_at")
         .first()
     )
+    payout_result = None
     if payment_txn:
-        payment_txn.owner_payout_status = OwnerPayoutStatus.RELEASED
-        payment_txn.save(update_fields=["owner_payout_status", "updated_at"])
+        payout_result = release_owner_payout(payment_txn)
 
     return Response(
         {
             "status": booking.status,
+            "completed_at": booking.completed_at,
             "owner_payout_status": payment_txn.owner_payout_status if payment_txn else None,
-            "message": "Trip completed. Owner payout marked for release.",
+            "owner_payout": payout_result,
+            "message": "Trip completed.",
+            "payout_message": payout_result.get("message") if payout_result else None,
         }
     )
 
@@ -156,7 +185,8 @@ def activate_booking(request, pkid):
     except Booking.DoesNotExist:
         return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if booking.renter_id != request.user.id and booking.car.user_id != request.user.id:
+    user_pk = request.user.pkid
+    if booking.renter_id != user_pk and booking.car.user_id != user_pk:
         return Response({"detail": "Not allowed"}, status=status.HTTP_403_FORBIDDEN)
 
     if booking.status != BookingStatus.PAID:
@@ -165,6 +195,8 @@ def activate_booking(request, pkid):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    now = timezone.now()
     booking.status = BookingStatus.ACTIVE
-    booking.save(update_fields=["status"])
-    return Response({"status": booking.status})
+    booking.activated_at = now
+    booking.save(update_fields=["status", "activated_at", "updated_at"])
+    return Response({"status": booking.status, "activated_at": booking.activated_at})

@@ -64,6 +64,9 @@ class Transaction(TimeStampedUUIDModel):
     mpesa_merchant_request_id = models.CharField(max_length=100, blank=True)
     mpesa_receipt_number = models.CharField(max_length=100, blank=True)
     failure_reason = models.TextField(blank=True)
+    owner_payout_phone = models.CharField(max_length=20, blank=True)
+    owner_payout_mpesa_receipt = models.CharField(max_length=100, blank=True)
+    owner_payout_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]

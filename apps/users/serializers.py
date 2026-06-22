@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     gender = serializers.SerializerMethodField()
     phone_number = serializers.SerializerMethodField()
+    mpesa_payout_number = serializers.SerializerMethodField()
     profile_photo = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
@@ -32,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "gender",
             "phone_number",
+            "mpesa_payout_number",
             "profile_photo",
             "country",
             "city",
@@ -57,6 +59,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_phone_number(self, obj):
         profile = self._get_profile(obj)
         return str(profile.phone_number) if profile and profile.phone_number else None
+
+    def get_mpesa_payout_number(self, obj):
+        profile = self._get_profile(obj)
+        return profile.mpesa_payout_number if profile and profile.mpesa_payout_number else None
 
     def get_profile_photo(self, obj):
         profile = self._get_profile(obj)

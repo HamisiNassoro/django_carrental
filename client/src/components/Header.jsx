@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Container, Nav, Navbar, Button } from "react-bootstrap";
 import { GiCarWheel } from "react-icons/gi";
-import { FaPhone, FaCar, FaUser, FaSignOutAlt, FaBars, FaMapMarkerAlt } from "react-icons/fa";
+import {
+	FaPhone,
+	FaCar,
+	FaUser,
+	FaSignOutAlt,
+	FaBars,
+	FaMapMarkerAlt,
+} from "react-icons/fa";
 import { LinkContainer } from "react-router-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -16,13 +23,9 @@ const Header = () => {
 	const [scrolled, setScrolled] = useState(false);
 
 	useEffect(() => {
-		const handleScroll = () => {
-			const isScrolled = window.scrollY > 10;
-			setScrolled(isScrolled);
-		};
-
-		window.addEventListener('scroll', handleScroll);
-		return () => window.removeEventListener('scroll', handleScroll);
+		const handleScroll = () => setScrolled(window.scrollY > 10);
+		window.addEventListener("scroll", handleScroll);
+		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
 	const onLogout = () => {
@@ -30,9 +33,8 @@ const Header = () => {
 		navigate("/");
 	};
 
-	const isActive = (path) => {
-		return location.pathname === path;
-	};
+	const isActive = (path) => location.pathname === path;
+	const displayName = user?.first_name || user?.username || "Account";
 
 	return (
 		<header>
@@ -40,20 +42,9 @@ const Header = () => {
 				fixed="top"
 				expand="lg"
 				collapseOnSelect
-				className={`modern-navbar ${scrolled ? 'scrolled' : ''}`}
-				style={{
-					background: scrolled
-						? 'rgba(255, 255, 255, 0.95)'
-						: 'rgba(255, 255, 255, 0.98)',
-					backdropFilter: 'blur(20px)',
-					transition: 'all 0.3s ease',
-					boxShadow: scrolled
-						? '0 8px 32px rgba(0, 0, 0, 0.1)'
-						: '0 2px 20px rgba(0, 0, 0, 0.05)',
-					borderBottom: scrolled ? '1px solid rgba(255, 255, 255, 0.2)' : 'none'
-				}}
+				className={`modern-navbar ${scrolled ? "scrolled" : ""}`}
 			>
-				<Container fluid className="px-4">
+				<Container fluid className="header-container px-3 px-lg-4">
 					<LinkContainer to="/">
 						<Navbar.Brand className="brand-container">
 							<div className="brand-logo">
@@ -63,118 +54,131 @@ const Header = () => {
 						</Navbar.Brand>
 					</LinkContainer>
 
+					{user && (
+						<div className="header-auth-bar d-none d-lg-flex">
+							<span className="header-user-label">
+								<FaUser className="me-1" />
+								{displayName}
+							</span>
+							<Button
+								variant="danger"
+								size="sm"
+								className="header-logout-btn"
+								onClick={onLogout}
+							>
+								<FaSignOutAlt className="me-1" />
+								Logout
+							</Button>
+						</div>
+					)}
+
+					{!user && (
+						<div className="header-auth-bar d-none d-lg-flex">
+							<LinkContainer to="/login">
+								<Button className="login-btn" size="sm">
+									Login
+								</Button>
+							</LinkContainer>
+							<LinkContainer to="/register">
+								<Button className="register-btn" size="sm">
+									Register
+								</Button>
+							</LinkContainer>
+						</div>
+					)}
+
 					<Navbar.Toggle
 						aria-controls="basic-navbar-nav"
-						className="custom-toggler"
+						className="custom-toggler ms-2"
 					>
 						<FaBars />
 					</Navbar.Toggle>
 
-					<Navbar.Collapse
-						id="basic-navbar-nav"
-						className="justify-content-between"
-					>
+					<Navbar.Collapse id="basic-navbar-nav" className="header-collapse">
 						<Nav className="main-nav">
 							<LinkContainer to="/">
-								<Nav.Link className={`nav-item ${isActive('/') ? 'active' : ''}`}>
-									<span className="nav-text">Home</span>
+								<Nav.Link className={`nav-item ${isActive("/") ? "active" : ""}`}>
+									Home
 								</Nav.Link>
 							</LinkContainer>
 							<LinkContainer to="/cars">
-								<Nav.Link className={`nav-item ${isActive('/cars') ? 'active' : ''}`}>
-									<span className="nav-text">Vehicles</span>
+								<Nav.Link className={`nav-item ${isActive("/cars") ? "active" : ""}`}>
+									Vehicles
 								</Nav.Link>
 							</LinkContainer>
 							<LinkContainer to="/nearby">
-								<Nav.Link className={`nav-item ${isActive('/nearby') ? 'active' : ''}`}>
+								<Nav.Link className={`nav-item ${isActive("/nearby") ? "active" : ""}`}>
 									<FaMapMarkerAlt className="nav-icon" />
-									<span className="nav-text">Nearby</span>
+									Nearby
 								</Nav.Link>
 							</LinkContainer>
 							<LinkContainer to="/my-cars">
-								<Nav.Link className={`nav-item ${isActive('/my-cars') ? 'active' : ''}`}>
+								<Nav.Link className={`nav-item ${isActive("/my-cars") ? "active" : ""}`}>
 									<FaCar className="nav-icon" />
-									<span className="nav-text">My Cars</span>
+									My Cars
 								</Nav.Link>
 							</LinkContainer>
 							{user && (
 								<>
 									<LinkContainer to="/my-bookings">
-										<Nav.Link className={`nav-item ${isActive('/my-bookings') ? 'active' : ''}`}>
-											<span className="nav-text">My Bookings</span>
+										<Nav.Link
+											className={`nav-item ${isActive("/my-bookings") ? "active" : ""}`}
+										>
+											My Bookings
 										</Nav.Link>
 									</LinkContainer>
 									<LinkContainer to="/owner-bookings">
-										<Nav.Link className={`nav-item ${isActive('/owner-bookings') ? 'active' : ''}`}>
-											<span className="nav-text">Rental Requests</span>
+										<Nav.Link
+											className={`nav-item ${isActive("/owner-bookings") ? "active" : ""}`}
+										>
+											Rental Requests
+										</Nav.Link>
+									</LinkContainer>
+									<LinkContainer to="/profile">
+										<Nav.Link className={`nav-item ${isActive("/profile") ? "active" : ""}`}>
+											Profile
 										</Nav.Link>
 									</LinkContainer>
 								</>
 							)}
-							<Nav.Link href="#details" className="nav-item">
-								<span className="nav-text">Details</span>
-							</Nav.Link>
 							<LinkContainer to="/about">
-								<Nav.Link className={`nav-item ${isActive('/about') ? 'active' : ''}`}>
-									<span className="nav-text">About Us</span>
+								<Nav.Link className={`nav-item ${isActive("/about") ? "active" : ""}`}>
+									About Us
 								</Nav.Link>
 							</LinkContainer>
 							<LinkContainer to="/contact">
-								<Nav.Link className={`nav-item ${isActive('/contact') ? 'active' : ''}`}>
-									<span className="nav-text">Contact Us</span>
+								<Nav.Link className={`nav-item ${isActive("/contact") ? "active" : ""}`}>
+									Contact Us
 								</Nav.Link>
 							</LinkContainer>
 						</Nav>
 
-						<div className="header-right">
-							<div className="contact-info">
-								<div className="contact-icon">
-									<FaPhone />
-								</div>
-								<div className="contact-text">
-									<span className="help-text">Need help?</span>
-									<span className="phone-number">+996 247-1680</span>
-								</div>
+						{user && (
+							<div className="header-mobile-auth d-lg-none">
+								<p className="header-mobile-user mb-2">
+									Signed in as <strong>{displayName}</strong>
+								</p>
+								<Button
+									variant="danger"
+									className="w-100 header-logout-btn"
+									onClick={onLogout}
+								>
+									<FaSignOutAlt className="me-2" />
+									Logout
+								</Button>
 							</div>
+						)}
 
-							<div className="auth-buttons">
-								{user ? (
-									<>
-										<div className="user-welcome">
-											<FaUser className="user-icon" />
-											<span className="welcome-text">
-												Welcome, {user.first_name || user.username}
-											</span>
-										</div>
-										<Button
-											className="logout-btn"
-											onClick={onLogout}
-										>
-											<FaSignOutAlt className="btn-icon" />
-											Logout
-										</Button>
-									</>
-								) : (
-									<>
-										<LinkContainer to="/login">
-											<Button className="login-btn">
-												Login
-											</Button>
-										</LinkContainer>
-										<LinkContainer to="/register">
-											<Button className="register-btn">
-												Register
-											</Button>
-										</LinkContainer>
-									</>
-								)}
-								<LinkContainer to="/auth-test">
-									<Button className="auth-test-btn">
-										Auth Test
-									</Button>
+						{!user && (
+							<div className="header-mobile-auth d-lg-none">
+								<LinkContainer to="/login" className="d-grid mb-2">
+									<Button className="login-btn">Login</Button>
+								</LinkContainer>
+								<LinkContainer to="/register" className="d-grid">
+									<Button className="register-btn">Register</Button>
 								</LinkContainer>
 							</div>
-						</div>
+						)}
 					</Navbar.Collapse>
 				</Container>
 			</Navbar>
