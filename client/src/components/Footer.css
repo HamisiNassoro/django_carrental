@@ -1,0 +1,96 @@
+.site-footer {
+  background: #0f1117;
+  color: rgba(255, 255, 255, 0.78);
+  padding: 3.5rem 0 1.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.site-footer__logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.site-footer__name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.site-footer__tagline {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  max-width: 20rem;
+  margin-bottom: 0;
+}
+
+.site-footer__heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.site-footer__links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.site-footer__links li {
+  margin-bottom: 0.55rem;
+}
+
+.site-footer__links a {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 0.92rem;
+  transition: color 0.2s ease;
+}
+
+.site-footer__links a:hover {
+  color: #fff;
+}
+
+.site-footer__contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  margin-bottom: 0.55rem;
+}
+
+.site-footer__contact svg {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.site-footer__bottom {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 767px) {
+  .site-footer {
+    padding-top: 2.5rem;
+  }
+}

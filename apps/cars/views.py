@@ -65,7 +65,7 @@ class ListAllCarsAPIView(generics.ListAPIView):
     ordering_fields = ["created_at", "-created_at", "price", "-price"]
 
     def get_queryset(self):
-        queryset = Car.objects.all()
+        queryset = Car.objects.select_related("user__profile")
         ordering = self.request.query_params.get("ordering", "-created_at")
         if ordering in self.ordering_fields:
             queryset = queryset.order_by(ordering)

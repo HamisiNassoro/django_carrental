@@ -13,7 +13,12 @@ const formatReviewDate = (value) =>
       })
     : "";
 
-const OwnerReviewsSection = ({ profileId, ownerRating, ownerNumReviews }) => {
+const OwnerReviewsSection = ({
+  profileId,
+  ownerRating,
+  ownerNumReviews,
+  title = "Owner reviews",
+}) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +40,7 @@ const OwnerReviewsSection = ({ profileId, ownerRating, ownerNumReviews }) => {
     <Card className="border-0 shadow-sm owner-reviews">
       <Card.Body className="p-4">
         <div className="owner-reviews__header">
-          <h5 className="fw-bold mb-0">Owner reviews</h5>
+          <h5 className="fw-bold mb-0">{title}</h5>
           {rating != null && rating > 0 && (
             <div className="owner-reviews__summary">
               <StarRating value={rating} readOnly size="sm" showValue />

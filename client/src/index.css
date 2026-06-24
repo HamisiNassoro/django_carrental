@@ -678,14 +678,40 @@ a.btn.btn-primary:active {
 	border: 1px solid #e9ecef;
 }
 
-@media (max-width: 768px) {
-	.wizard-steps {
-		grid-template-columns: repeat(2, 1fr);
-	}
+.owner-reviews--dashboard .owner-reviews {
+  margin-top: 0;
+}
 
-	.photo-upload-grid {
-		grid-template-columns: 1fr;
-	}
+@media (max-width: 768px) {
+  .cars-page {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .cars-page .page-title {
+    font-size: 1.65rem;
+  }
+
+  .cars-search-card .card-body {
+    padding: 1.15rem !important;
+  }
+
+  .modal-dialog {
+    margin: 0.75rem;
+  }
+
+  .modal-lg {
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .page-title {
+    font-size: 1.65rem;
+  }
+
+  .container.py-5[style*="marginTop"] {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
 }
 
 .car-map {

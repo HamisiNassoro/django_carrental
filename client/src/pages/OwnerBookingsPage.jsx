@@ -5,9 +5,11 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import BookingTimeline from "../components/BookingTimeline";
 import OwnerEarningsSummary from "../components/OwnerEarningsSummary";
+import OwnerReviewsSection from "../components/OwnerReviewsSection";
 import Spinner from "../components/Spinner";
 import TripHandoverModal from "../components/TripHandoverModal";
 import bookingAPIService from "../features/bookings/bookingAPIService";
+import profileAPIService from "../features/profile/profileAPIService";
 import {
   bookingStatusLabel,
   bookingStatusVariant,
@@ -52,6 +54,7 @@ const OwnerBookingsPage = () => {
     (state) => state.bookings
   );
   const [earnings, setEarnings] = useState(null);
+  const [ownerProfile, setOwnerProfile] = useState(null);
   const [handoverTarget, setHandoverTarget] = useState(null);
   const [handoverMode, setHandoverMode] = useState("pickup");
   const [handoverSubmitting, setHandoverSubmitting] = useState(false);
@@ -59,6 +62,7 @@ const OwnerBookingsPage = () => {
   useEffect(() => {
     dispatch(getOwnerBookings());
     bookingAPIService.getOwnerEarnings().then(setEarnings).catch(() => {});
+    profileAPIService.getMyProfile().then(setOwnerProfile).catch(() => {});
     return () => dispatch(reset());
   }, [dispatch]);
 
@@ -240,6 +244,21 @@ const OwnerBookingsPage = () => {
               </Card>
             </Col>
           ))}
+        </Row>
+      )}
+
+      {ownerProfile?.id && (
+        <Row className="mt-2">
+          <Col lg={8}>
+            <div className="owner-reviews--dashboard">
+              <OwnerReviewsSection
+                profileId={ownerProfile.id}
+                ownerRating={ownerProfile.rating}
+                ownerNumReviews={ownerProfile.num_reviews}
+                title="Reviews about you"
+              />
+            </div>
+          </Col>
         </Row>
       )}
 

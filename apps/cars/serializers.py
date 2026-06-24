@@ -30,6 +30,8 @@ class CarSerializer(serializers.ModelSerializer):
     photo2 = serializers.SerializerMethodField()
     photo3 = serializers.SerializerMethodField()
     photo4 = serializers.SerializerMethodField()
+    owner_rating = serializers.SerializerMethodField()
+    owner_num_reviews = serializers.SerializerMethodField()
 
     class Meta:
         model = Car
@@ -65,9 +67,24 @@ class CarSerializer(serializers.ModelSerializer):
             "location",
             "current_location",
             "is_available",
+            "owner_rating",
+            "owner_num_reviews",
             "created_at",
             "updated_at",
         ]
+
+    def _owner_profile(self, obj):
+        return getattr(obj.user, "profile", None)
+
+    def get_owner_rating(self, obj):
+        profile = self._owner_profile(obj)
+        if profile and profile.rating is not None:
+            return float(profile.rating)
+        return None
+
+    def get_owner_num_reviews(self, obj):
+        profile = self._owner_profile(obj)
+        return profile.num_reviews if profile else 0
 
     def get_user(self, obj):
         return obj.user.username
@@ -100,19 +117,12 @@ class CarDetailSerializer(CarSerializer):
 
     owner_profile_id = serializers.SerializerMethodField()
     owner_name = serializers.SerializerMethodField()
-    owner_rating = serializers.SerializerMethodField()
-    owner_num_reviews = serializers.SerializerMethodField()
 
     class Meta(CarSerializer.Meta):
         fields = CarSerializer.Meta.fields + [
             "owner_profile_id",
             "owner_name",
-            "owner_rating",
-            "owner_num_reviews",
         ]
-
-    def _owner_profile(self, obj):
-        return getattr(obj.user, "profile", None)
 
     def get_owner_profile_id(self, obj):
         profile = self._owner_profile(obj)
@@ -122,16 +132,6 @@ class CarDetailSerializer(CarSerializer):
         user = obj.user
         full = f"{user.first_name} {user.last_name}".strip()
         return full or user.username
-
-    def get_owner_rating(self, obj):
-        profile = self._owner_profile(obj)
-        if profile and profile.rating is not None:
-            return float(profile.rating)
-        return None
-
-    def get_owner_num_reviews(self, obj):
-        profile = self._owner_profile(obj)
-        return profile.num_reviews if profile else 0
 
 class CarCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating cars"""

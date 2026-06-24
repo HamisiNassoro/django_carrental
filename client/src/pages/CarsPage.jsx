@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Col, Container, Row, Button, Card, Form, Badge } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { FaCog, FaMapMarkerAlt, FaUsers, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
+import CarListingCard from "../components/CarListingCard";
 import { getCars } from "../features/cars/carSlice";
-import { resolveCarImage } from "../utils/mediaUrl";
-import { formatDailyRate } from "../utils/currency";
 import {
   CAR_TYPE_OPTIONS,
   carMatchesType,
@@ -392,55 +391,7 @@ const CarsPage = () => {
         <Row>
           {filteredCars.map((car) => (
             <Col key={car.id} lg={4} md={6} className="mb-4">
-              <Card className="h-100 car-card border-0 shadow-sm">
-                <Card.Body className="p-4">
-                  <div className="text-center mb-3">
-                    <img
-                      src={resolveCarImage(car.cover_photo)}
-                      alt={car.title}
-                      className="car-card-image"
-                    />
-                  </div>
-
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                      <h5 className="fw-bold mb-1">{car.title}</h5>
-                      <p className="text-muted mb-0">
-                        {getCarTypeLabel(car.car_type)}
-                      </p>
-                    </div>
-                    <div className="text-end">
-                      <h4 className="fw-bold mb-0 text-primary">
-                        {formatDailyRate(car.price, car.currency || "KES")}
-                      </h4>
-                      <small className="text-muted">per day</small>
-                    </div>
-                  </div>
-
-                  <div className="d-flex justify-content-center gap-4 mb-3 text-muted small">
-                    <span>
-                      <FaCog className="me-1" />
-                      {car.advert_type}
-                    </span>
-                    <span>
-                      <FaUsers className="me-1" />
-                      {car.total_seats} seats
-                    </span>
-                    <span>
-                      <FaMapMarkerAlt className="me-1" />
-                      {car.city}
-                    </span>
-                  </div>
-
-                  <Link
-                    to={`/car/${car.slug}`}
-                    state={bookingState}
-                    className="text-decoration-none"
-                  >
-                    <Button className="w-100 btn-accent">View & Book</Button>
-                  </Link>
-                </Card.Body>
-              </Card>
+              <CarListingCard car={car} bookingState={bookingState} />
             </Col>
           ))}
         </Row>
