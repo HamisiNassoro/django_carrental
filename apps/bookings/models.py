@@ -46,6 +46,12 @@ class Booking(TimeStampedUUIDModel):
     paid_at = models.DateTimeField(blank=True, null=True)
     activated_at = models.DateTimeField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
+    pickup_mileage = models.PositiveIntegerField(blank=True, null=True)
+    pickup_notes = models.TextField(blank=True)
+    pickup_photo = models.ImageField(upload_to="handover/pickup/", blank=True, null=True)
+    return_mileage = models.PositiveIntegerField(blank=True, null=True)
+    return_notes = models.TextField(blank=True)
+    return_photo = models.ImageField(upload_to="handover/return/", blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]

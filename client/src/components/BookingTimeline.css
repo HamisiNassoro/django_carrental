@@ -1,0 +1,143 @@
+.booking-timeline {
+  margin: 1rem 0 1.25rem;
+  padding: 1rem 1rem 0.5rem;
+  background: #f8f9fc;
+  border-radius: 10px;
+  border: 1px solid #eef1f6;
+}
+
+.booking-timeline__title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+.booking-timeline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-timeline__step {
+  display: flex;
+  gap: 0.75rem;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.booking-timeline__step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  top: 1.75rem;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.booking-timeline__step--done:not(:last-child)::before {
+  background: #667eea;
+}
+
+.booking-timeline__marker {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #e9ecef;
+  color: #6c757d;
+  z-index: 1;
+}
+
+.booking-timeline__step--done .booking-timeline__marker {
+  background: #667eea;
+  color: #fff;
+}
+
+.booking-timeline__step--current .booking-timeline__marker {
+  background: #fff;
+  border: 2px solid #667eea;
+  color: #667eea;
+}
+
+.booking-timeline__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.booking-timeline__step--upcoming .booking-timeline__label {
+  color: #adb5bd;
+}
+
+.booking-timeline__time {
+  font-size: 0.78rem;
+  color: #6c757d;
+}
+
+.booking-timeline__detail {
+  font-size: 0.78rem;
+  color: #667eea;
+  margin-top: 0.15rem;
+}
+
+.booking-timeline--compact .booking-timeline__detail {
+  display: none;
+}
+
+.owner-earnings-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.owner-earnings-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fc 100%);
+  border: 1px solid #eef1f6;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.owner-earnings-card__label {
+  font-size: 0.78rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
+}
+
+.owner-earnings-card__value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.owner-earnings-card--earned .owner-earnings-card__value {
+  color: #198754;
+}
+
+.owner-earnings-card--pending .owner-earnings-card__value {
+  color: #d97706;
+}
+
+.handover-summary {
+  font-size: 0.82rem;
+  color: #495057;
+  background: #f1f3f9;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.handover-summary strong {
+  color: #2c3e50;
+}

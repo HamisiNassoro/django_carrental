@@ -34,6 +34,12 @@ class BookingSerializer(serializers.ModelSerializer):
             "paid_at",
             "activated_at",
             "completed_at",
+            "pickup_mileage",
+            "pickup_notes",
+            "pickup_photo",
+            "return_mileage",
+            "return_notes",
+            "return_photo",
             "created_at",
             "updated_at",
         ]
@@ -48,6 +54,12 @@ class BookingSerializer(serializers.ModelSerializer):
             "paid_at",
             "activated_at",
             "completed_at",
+            "pickup_mileage",
+            "pickup_notes",
+            "pickup_photo",
+            "return_mileage",
+            "return_notes",
+            "return_photo",
             "created_at",
             "updated_at",
         ]
@@ -94,9 +106,31 @@ class BookingSerializer(serializers.ModelSerializer):
 class BookingDetailSerializer(BookingSerializer):
     car_detail = CarSerializer(source="car", read_only=True)
     latest_transaction = serializers.SerializerMethodField()
+    pickup_photo_url = serializers.SerializerMethodField()
+    return_photo_url = serializers.SerializerMethodField()
 
     class Meta(BookingSerializer.Meta):
-        fields = BookingSerializer.Meta.fields + ["car_detail", "latest_transaction"]
+        fields = BookingSerializer.Meta.fields + [
+            "car_detail",
+            "latest_transaction",
+            "pickup_photo_url",
+            "return_photo_url",
+        ]
+
+    def _photo_url(self, obj, field_name):
+        photo = getattr(obj, field_name, None)
+        if not photo:
+            return None
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(photo.url)
+        return photo.url
+
+    def get_pickup_photo_url(self, obj):
+        return self._photo_url(obj, "pickup_photo")
+
+    def get_return_photo_url(self, obj):
+        return self._photo_url(obj, "return_photo")
 
     def get_latest_transaction(self, obj):
         transaction = obj.transactions.order_by("-created_at").first()

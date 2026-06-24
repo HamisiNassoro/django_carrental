@@ -108,9 +108,9 @@ export const payBooking = createAsyncThunk(
 
 export const activateBooking = createAsyncThunk(
   "bookings/activate",
-  async (pkid, thunkAPI) => {
+  async ({ pkid, handover }, thunkAPI) => {
     try {
-      return await bookingAPIService.activateBooking(pkid);
+      return await bookingAPIService.activateBooking(pkid, handover);
     } catch (error) {
       return thunkAPI.rejectWithValue(formatApiError(error));
     }
@@ -119,9 +119,9 @@ export const activateBooking = createAsyncThunk(
 
 export const completeBooking = createAsyncThunk(
   "bookings/complete",
-  async (pkid, thunkAPI) => {
+  async ({ pkid, handover }, thunkAPI) => {
     try {
-      return await bookingAPIService.completeBooking(pkid);
+      return await bookingAPIService.completeBooking(pkid, handover);
     } catch (error) {
       return thunkAPI.rejectWithValue(formatApiError(error));
     }
@@ -218,17 +218,26 @@ export const bookingSlice = createSlice({
         state.message = action.payload;
       })
       .addCase(activateBooking.fulfilled, (state, action) => {
+        const pkid = action.meta.arg.pkid;
         const updateList = (list) => {
-          const booking = list.find((item) => item.pkid === action.meta.arg);
-          if (booking) booking.status = action.payload.status;
+          const booking = list.find((item) => item.pkid === pkid);
+          if (booking) {
+            booking.status = action.payload.status;
+            booking.activated_at = action.payload.activated_at;
+            booking.pickup_mileage = action.payload.pickup_mileage;
+          }
         };
         updateList(state.myBookings);
         updateList(state.ownerBookings);
       })
       .addCase(completeBooking.fulfilled, (state, action) => {
+        const pkid = action.meta.arg.pkid;
         const updateList = (list) => {
-          const booking = list.find((item) => item.pkid === action.meta.arg);
-          if (booking) booking.status = action.payload.status;
+          const booking = list.find((item) => item.pkid === pkid);
+          if (booking) {
+            booking.status = action.payload.status;
+            booking.completed_at = action.payload.completed_at;
+          }
         };
         updateList(state.myBookings);
         updateList(state.ownerBookings);

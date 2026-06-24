@@ -1,9 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Badge, Button, Card, Col, Container, Row } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import BookingTimeline from "../components/BookingTimeline";
+import OwnerEarningsSummary from "../components/OwnerEarningsSummary";
 import Spinner from "../components/Spinner";
+import TripHandoverModal from "../components/TripHandoverModal";
+import bookingAPIService from "../features/bookings/bookingAPIService";
 import {
   bookingStatusLabel,
   bookingStatusVariant,
@@ -22,14 +26,39 @@ import {
   reset,
 } from "../features/bookings/bookingSlice";
 
+const HandoverSummary = ({ booking }) => {
+  if (!booking.pickup_mileage && !booking.return_mileage) return null;
+  return (
+    <div className="handover-summary">
+      {booking.pickup_mileage != null && (
+        <div>
+          Pickup: <strong>{Number(booking.pickup_mileage).toLocaleString()} km</strong>
+          {booking.pickup_notes ? ` — ${booking.pickup_notes}` : ""}
+        </div>
+      )}
+      {booking.return_mileage != null && (
+        <div className="mt-1">
+          Return: <strong>{Number(booking.return_mileage).toLocaleString()} km</strong>
+          {booking.return_notes ? ` — ${booking.return_notes}` : ""}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const OwnerBookingsPage = () => {
   const dispatch = useDispatch();
   const { ownerBookings, isLoading, isError, message } = useSelector(
     (state) => state.bookings
   );
+  const [earnings, setEarnings] = useState(null);
+  const [handoverTarget, setHandoverTarget] = useState(null);
+  const [handoverMode, setHandoverMode] = useState("pickup");
+  const [handoverSubmitting, setHandoverSubmitting] = useState(false);
 
   useEffect(() => {
     dispatch(getOwnerBookings());
+    bookingAPIService.getOwnerEarnings().then(setEarnings).catch(() => {});
     return () => dispatch(reset());
   }, [dispatch]);
 
@@ -37,14 +66,16 @@ const OwnerBookingsPage = () => {
     if (isError && message) toast.error(message);
   }, [isError, message]);
 
+  const refresh = () => {
+    dispatch(getOwnerBookings());
+    bookingAPIService.getOwnerEarnings().then(setEarnings).catch(() => {});
+  };
+
   const handleApprove = async (pkid) => {
     const result = await dispatch(approveBooking(pkid));
     if (approveBooking.fulfilled.match(result)) {
-      toast.success(
-        result.payload?.message ||
-          "Approved — renter will receive a payment prompt"
-      );
-      dispatch(getOwnerBookings());
+      toast.success(result.payload?.message || "Approved — renter can pay now");
+      refresh();
     } else {
       toast.error(result.payload || "Could not approve booking");
     }
@@ -54,30 +85,41 @@ const OwnerBookingsPage = () => {
     const result = await dispatch(declineBooking(pkid));
     if (declineBooking.fulfilled.match(result)) {
       toast.success("Booking declined");
-      dispatch(getOwnerBookings());
+      refresh();
     } else {
       toast.error(result.payload || "Could not decline booking");
     }
   };
 
-  const handleActivate = async (pkid) => {
-    const result = await dispatch(activateBooking(pkid));
-    if (activateBooking.fulfilled.match(result)) {
-      toast.success("Rental marked as active");
-      dispatch(getOwnerBookings());
-    } else {
-      toast.error(result.payload || "Could not activate rental");
-    }
+  const openHandover = (booking, mode) => {
+    setHandoverTarget(booking);
+    setHandoverMode(mode);
   };
 
-  const handleComplete = async (pkid) => {
-    const result = await dispatch(completeBooking(pkid));
-    if (completeBooking.fulfilled.match(result)) {
-      const { type, message } = getCompleteTripToast(result.payload?.owner_payout);
-      toast[type](message);
-      dispatch(getOwnerBookings());
+  const handleHandoverSubmit = async (handover) => {
+    if (!handoverTarget) return;
+    setHandoverSubmitting(true);
+    const action =
+      handoverMode === "pickup"
+        ? activateBooking({ pkid: handoverTarget.pkid, handover })
+        : completeBooking({ pkid: handoverTarget.pkid, handover });
+
+    const result = await dispatch(action);
+    setHandoverSubmitting(false);
+
+    if (activateBooking.fulfilled.match(result)) {
+      toast.success(result.payload?.message || "Rental started");
+      setHandoverTarget(null);
+      refresh();
+    } else if (completeBooking.fulfilled.match(result)) {
+      const { type, message: payoutMsg } = getCompleteTripToast(
+        result.payload?.owner_payout
+      );
+      toast[type](payoutMsg);
+      setHandoverTarget(null);
+      refresh();
     } else {
-      toast.error(result.payload || "Could not complete trip");
+      toast.error(result.payload || "Could not save checklist");
     }
   };
 
@@ -88,13 +130,14 @@ const OwnerBookingsPage = () => {
       <Row className="mb-4">
         <Col>
           <h1 className="fw-bold page-title">Rental Requests</h1>
-          <p className="text-muted mb-4">
-            Approve requests, then receive payout after the trip completes.
-            {" "}
+          <p className="text-muted mb-3">
+            Approve requests, hand over the vehicle, then receive payout after the trip
+            completes.{" "}
             <Link to="/profile" className="text-decoration-none">
               Set your M-Pesa payout number
             </Link>
           </p>
+          <OwnerEarningsSummary earnings={earnings} />
         </Col>
       </Row>
 
@@ -113,7 +156,7 @@ const OwnerBookingsPage = () => {
             <Col md={6} key={booking.id}>
               <Card className="border-0 shadow-sm h-100">
                 <Card.Body>
-                  <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div className="d-flex justify-content-between align-items-start mb-2">
                     <div>
                       <h5 className="fw-bold mb-1">
                         {booking.car_detail?.title || booking.car}
@@ -126,6 +169,9 @@ const OwnerBookingsPage = () => {
                       {bookingStatusLabel[booking.status] || booking.status}
                     </Badge>
                   </div>
+
+                  <BookingTimeline booking={booking} compact />
+
                   <p className="mb-1">
                     <strong>Rental total:</strong>{" "}
                     {formatMoney(booking.total_price, booking.currency)}
@@ -134,7 +180,7 @@ const OwnerBookingsPage = () => {
                     <strong>Your payout:</strong>{" "}
                     {formatMoney(booking.owner_payout, booking.currency)}
                   </p>
-                  <p className="text-muted small mb-3">
+                  <p className="text-muted small mb-2">
                     Platform fee:{" "}
                     {formatMoney(booking.platform_fee, booking.currency)}
                     {(() => {
@@ -144,19 +190,13 @@ const OwnerBookingsPage = () => {
                       return payoutLabel ? <> · Payout {payoutLabel}</> : null;
                     })()}
                   </p>
-                  {booking.paid_at && (
-                    <p className="text-muted small mb-2">
-                      Renter paid: {new Date(booking.paid_at).toLocaleString()}
-                    </p>
-                  )}
-                  {booking.activated_at && (
-                    <p className="text-muted small mb-2">
-                      Rental started: {new Date(booking.activated_at).toLocaleString()}
-                    </p>
-                  )}
+
+                  <HandoverSummary booking={booking} />
+
                   {booking.notes && (
                     <p className="text-muted small mb-3">{booking.notes}</p>
                   )}
+
                   <div className="d-flex flex-wrap gap-2">
                     {booking.status === "PENDING" && (
                       <>
@@ -178,20 +218,21 @@ const OwnerBookingsPage = () => {
                     )}
                     {booking.status === "PAID" && (
                       <Button
-                        variant="outline-primary"
+                        variant="primary"
                         size="sm"
-                        onClick={() => handleActivate(booking.pkid)}
+                        className="btn-accent"
+                        onClick={() => openHandover(booking, "pickup")}
                       >
-                        Start rental
+                        Start rental (pickup)
                       </Button>
                     )}
-                    {["PAID", "ACTIVE"].includes(booking.status) && (
+                    {booking.status === "ACTIVE" && (
                       <Button
                         variant="outline-secondary"
                         size="sm"
-                        onClick={() => handleComplete(booking.pkid)}
+                        onClick={() => openHandover(booking, "return")}
                       >
-                        Complete trip
+                        Complete trip (return)
                       </Button>
                     )}
                   </div>
@@ -201,6 +242,15 @@ const OwnerBookingsPage = () => {
           ))}
         </Row>
       )}
+
+      <TripHandoverModal
+        show={Boolean(handoverTarget)}
+        onHide={() => setHandoverTarget(null)}
+        mode={handoverMode}
+        booking={handoverTarget}
+        onSubmit={handleHandoverSubmit}
+        isSubmitting={handoverSubmitting}
+      />
     </Container>
   );
 };

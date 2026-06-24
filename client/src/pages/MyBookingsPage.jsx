@@ -3,8 +3,11 @@ import { Badge, Button, Card, Col, Container, Row, Spinner as BsSpinner } from "
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import BookingTimeline from "../components/BookingTimeline";
+import "../components/BookingTimeline.css";
 import Spinner from "../components/Spinner";
 import PayBookingModal from "../components/PayBookingModal";
+import TripHandoverModal from "../components/TripHandoverModal";
 import paymentAPIService from "../features/payments/paymentAPIService";
 import {
   bookingStatusLabel,
@@ -29,6 +32,8 @@ const MyBookingsPage = () => {
     (state) => state.bookings
   );
   const [payTarget, setPayTarget] = useState(null);
+  const [completeTarget, setCompleteTarget] = useState(null);
+  const [completeSubmitting, setCompleteSubmitting] = useState(false);
   const [pollingPkid, setPollingPkid] = useState(null);
   const pollRef = useRef(null);
 
@@ -109,11 +114,17 @@ const MyBookingsPage = () => {
     }
   };
 
-  const handleComplete = async (pkid) => {
-    const result = await dispatch(completeBooking(pkid));
+  const handleCompleteSubmit = async (handover) => {
+    if (!completeTarget) return;
+    setCompleteSubmitting(true);
+    const result = await dispatch(
+      completeBooking({ pkid: completeTarget.pkid, handover })
+    );
+    setCompleteSubmitting(false);
     if (completeBooking.fulfilled.match(result)) {
       const { type, message } = getCompleteTripToast(result.payload?.owner_payout);
       toast[type](message);
+      setCompleteTarget(null);
       dispatch(getMyBookings());
     } else {
       toast.error(result.payload || "Could not complete trip");
@@ -174,6 +185,7 @@ const MyBookingsPage = () => {
                         {bookingStatusLabel[booking.status] || booking.status}
                       </Badge>
                     </div>
+                    <BookingTimeline booking={booking} compact />
                     <p className="mb-1">
                       <strong>Total:</strong>{" "}
                       {formatMoney(booking.total_price, booking.currency)}
@@ -197,6 +209,12 @@ const MyBookingsPage = () => {
                       <p className="small text-info mb-3 d-flex align-items-center gap-2">
                         <BsSpinner animation="border" size="sm" />
                         Waiting for M-Pesa confirmation…
+                      </p>
+                    )}
+                    {booking.pickup_mileage != null && (
+                      <p className="handover-summary small">
+                        Pickup odometer:{" "}
+                        <strong>{Number(booking.pickup_mileage).toLocaleString()} km</strong>
                       </p>
                     )}
                     {booking.notes && (
@@ -224,13 +242,13 @@ const MyBookingsPage = () => {
                           Cancel
                         </Button>
                       )}
-                      {["PAID", "ACTIVE"].includes(booking.status) && (
+                      {booking.status === "ACTIVE" && (
                         <Button
                           variant="outline-primary"
                           size="sm"
-                          onClick={() => handleComplete(booking.pkid)}
+                          onClick={() => setCompleteTarget(booking)}
                         >
-                          Mark trip complete
+                          Complete trip (return)
                         </Button>
                       )}
                     </div>
@@ -249,6 +267,15 @@ const MyBookingsPage = () => {
         onPay={handlePay}
         isPaying={isLoading}
         defaultPhone={defaultPayPhone}
+      />
+
+      <TripHandoverModal
+        show={Boolean(completeTarget)}
+        onHide={() => setCompleteTarget(null)}
+        mode="return"
+        booking={completeTarget}
+        onSubmit={handleCompleteSubmit}
+        isSubmitting={completeSubmitting}
       />
     </Container>
   );
