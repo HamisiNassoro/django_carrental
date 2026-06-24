@@ -96,10 +96,42 @@ class CarSerializer(serializers.ModelSerializer):
         return build_media_url(self, obj.photo4)
 
 class CarDetailSerializer(CarSerializer):
-    """Extended serializer for car details with additional fields"""
-    
-    # Inherit all fields from CarSerializer
-    pass
+    """Extended serializer for car details with owner trust signals."""
+
+    owner_profile_id = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField()
+    owner_rating = serializers.SerializerMethodField()
+    owner_num_reviews = serializers.SerializerMethodField()
+
+    class Meta(CarSerializer.Meta):
+        fields = CarSerializer.Meta.fields + [
+            "owner_profile_id",
+            "owner_name",
+            "owner_rating",
+            "owner_num_reviews",
+        ]
+
+    def _owner_profile(self, obj):
+        return getattr(obj.user, "profile", None)
+
+    def get_owner_profile_id(self, obj):
+        profile = self._owner_profile(obj)
+        return str(profile.id) if profile else None
+
+    def get_owner_name(self, obj):
+        user = obj.user
+        full = f"{user.first_name} {user.last_name}".strip()
+        return full or user.username
+
+    def get_owner_rating(self, obj):
+        profile = self._owner_profile(obj)
+        if profile and profile.rating is not None:
+            return float(profile.rating)
+        return None
+
+    def get_owner_num_reviews(self, obj):
+        profile = self._owner_profile(obj)
+        return profile.num_reviews if profile else 0
 
 class CarCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating cars"""
@@ -169,7 +201,12 @@ class CarCreateSerializer(serializers.ModelSerializer):
             currency_for_country(validated_data.get("country", "KE")),
         )
         validated_data["user"] = self.context["request"].user
-        return super().create(validated_data)
+        car = super().create(validated_data)
+        profile = getattr(self.context["request"].user, "profile", None)
+        if profile and not profile.car_owner:
+            profile.car_owner = True
+            profile.save(update_fields=["car_owner"])
+        return car
 
 class CarLocationSerializer(serializers.ModelSerializer):
     """Serializer for updating car location"""

@@ -20,6 +20,10 @@ const buildSearchFromState = (bookingSearch) => ({
   end_date: bookingSearch?.end_date || "",
   car_type: normalizeCarTypeFilter(bookingSearch?.carType) || "",
   city: bookingSearch?.rentalPlace || "",
+  min_price: bookingSearch?.min_price || "",
+  max_price: bookingSearch?.max_price || "",
+  min_seats: bookingSearch?.min_seats || "",
+  ordering: bookingSearch?.ordering || "-created_at",
 });
 
 const CarsPage = () => {
@@ -46,6 +50,10 @@ const CarsPage = () => {
     );
     if (carType) params.car_type = carType;
     if (search.city) params.search = search.city;
+    if (search.min_price) params.min_price = search.min_price;
+    if (search.max_price) params.max_price = search.max_price;
+    if (search.min_seats) params.min_seats = search.min_seats;
+    if (search.ordering) params.ordering = search.ordering;
     return params;
   }, [search, selectedType]);
 
@@ -83,12 +91,23 @@ const CarsPage = () => {
     search.end_date ||
     search.car_type ||
     search.city ||
+    search.min_price ||
+    search.max_price ||
+    search.min_seats ||
     selectedType !== "all";
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (search.start_date && search.end_date && search.end_date < search.start_date) {
       toast.error("Return date must be on or after pickup date");
+      return;
+    }
+    if (
+      search.min_price &&
+      search.max_price &&
+      Number(search.max_price) < Number(search.min_price)
+    ) {
+      toast.error("Max price must be greater than or equal to min price");
       return;
     }
     if (search.car_type) {
@@ -102,6 +121,10 @@ const CarsPage = () => {
       end_date: "",
       car_type: "",
       city: "",
+      min_price: "",
+      max_price: "",
+      min_seats: "",
+      ordering: "-created_at",
     });
     setSelectedType("all");
     navigate("/cars", { replace: true, state: null });
@@ -115,6 +138,9 @@ const CarsPage = () => {
             end_date: search.end_date,
             carType: selectedType !== "all" ? selectedType : search.car_type,
             rentalPlace: search.city,
+            min_price: search.min_price,
+            max_price: search.max_price,
+            min_seats: search.min_seats,
           },
         }
       : undefined;
@@ -188,7 +214,60 @@ const CarsPage = () => {
                   }
                 />
               </Col>
-              <Col md={12} lg={2} className="d-flex gap-2">
+              <Col md={6} lg={2}>
+                <Form.Label className="small text-muted mb-1">Min price (KSh/day)</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  placeholder="Any"
+                  value={search.min_price}
+                  onChange={(e) =>
+                    setSearch((prev) => ({ ...prev, min_price: e.target.value }))
+                  }
+                />
+              </Col>
+              <Col md={6} lg={2}>
+                <Form.Label className="small text-muted mb-1">Max price (KSh/day)</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  placeholder="Any"
+                  value={search.max_price}
+                  onChange={(e) =>
+                    setSearch((prev) => ({ ...prev, max_price: e.target.value }))
+                  }
+                />
+              </Col>
+              <Col md={4} lg={2}>
+                <Form.Label className="small text-muted mb-1">Min seats</Form.Label>
+                <Form.Select
+                  value={search.min_seats}
+                  onChange={(e) =>
+                    setSearch((prev) => ({ ...prev, min_seats: e.target.value }))
+                  }
+                >
+                  <option value="">Any</option>
+                  {[2, 4, 5, 7, 8].map((n) => (
+                    <option key={n} value={n}>
+                      {n}+ seats
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={4} lg={2}>
+                <Form.Label className="small text-muted mb-1">Sort by</Form.Label>
+                <Form.Select
+                  value={search.ordering}
+                  onChange={(e) =>
+                    setSearch((prev) => ({ ...prev, ordering: e.target.value }))
+                  }
+                >
+                  <option value="-created_at">Newest first</option>
+                  <option value="price">Price: low to high</option>
+                  <option value="-price">Price: high to low</option>
+                </Form.Select>
+              </Col>
+              <Col md={4} lg={2} className="d-flex gap-2 align-items-end">
                 <Button type="submit" className="btn-accent flex-grow-1">
                   Search
                 </Button>
@@ -224,6 +303,20 @@ const CarsPage = () => {
           {search.city && (
             <Badge bg="light" text="dark" className="cars-filter-badge">
               {search.city}
+            </Badge>
+          )}
+          {(search.min_price || search.max_price) && (
+            <Badge bg="light" text="dark" className="cars-filter-badge">
+              {search.min_price && search.max_price
+                ? `KSh ${search.min_price}–${search.max_price}/day`
+                : search.min_price
+                  ? `From KSh ${search.min_price}/day`
+                  : `Up to KSh ${search.max_price}/day`}
+            </Badge>
+          )}
+          {search.min_seats && (
+            <Badge bg="light" text="dark" className="cars-filter-badge">
+              {search.min_seats}+ seats
             </Badge>
           )}
           <Button
@@ -262,6 +355,12 @@ const CarsPage = () => {
           </Button>
         ))}
       </div>
+
+      {filteredCars.length > 0 && (
+        <p className="text-muted small mb-3">
+          {filteredCars.length} vehicle{filteredCars.length !== 1 ? "s" : ""} available
+        </p>
+      )}
 
       {filteredCars.length === 0 ? (
         <Row>

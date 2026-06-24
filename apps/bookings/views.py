@@ -41,7 +41,9 @@ class MyBookingsListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         expire_overdue_bookings()
-        return Booking.objects.filter(renter=self.request.user).select_related("car")
+        return Booking.objects.filter(renter=self.request.user).select_related(
+            "car"
+        ).prefetch_related("renter_review")
 
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)

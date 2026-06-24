@@ -13,6 +13,8 @@ import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
+import StarRating from "../components/StarRating";
+import OwnerReviewsSection from "../components/OwnerReviewsSection";
 import {
   FaCog,
   FaUser,
@@ -249,6 +251,25 @@ const CarDetailPage = () => {
           <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="p-4">
               <h2 className="fw-bold mb-3">{car.title}</h2>
+              {car.owner_rating != null && car.owner_rating > 0 && (
+                <div className="d-flex align-items-center gap-2 mb-3">
+                  <StarRating
+                    value={car.owner_rating}
+                    readOnly
+                    size="sm"
+                    showValue
+                  />
+                  <span className="text-muted small">
+                    · {car.owner_num_reviews || 0} owner review
+                    {(car.owner_num_reviews || 0) !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+              {car.owner_name && (
+                <p className="text-muted small mb-3">
+                  Listed by <strong>{car.owner_name}</strong>
+                </p>
+              )}
               <p className="text-muted mb-4">{car.description}</p>
 
               <div className="mb-4">
@@ -298,6 +319,18 @@ const CarDetailPage = () => {
           </Card>
         </Col>
       </Row>
+
+      {car.owner_profile_id && (
+        <Row className="mt-2">
+          <Col lg={8}>
+            <OwnerReviewsSection
+              profileId={car.owner_profile_id}
+              ownerRating={car.owner_rating}
+              ownerNumReviews={car.owner_num_reviews}
+            />
+          </Col>
+        </Row>
+      )}
 
       <Modal
         show={showBookingModal}

@@ -1,0 +1,132 @@
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.star-rating__stars {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.star-rating__star {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #dee2e6;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.star-rating__star:not(:disabled):hover {
+  transform: scale(1.08);
+}
+
+.star-rating__star--filled,
+.star-rating__star--active {
+  color: #f59e0b;
+}
+
+.star-rating--sm .star-rating__star {
+  font-size: 0.85rem;
+}
+
+.star-rating--md .star-rating__star {
+  font-size: 1.1rem;
+}
+
+.star-rating--lg .star-rating__star {
+  font-size: 1.45rem;
+}
+
+.star-rating__value {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.owner-reviews {
+  margin-top: 1.5rem;
+}
+
+.owner-reviews__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owner-reviews__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.owner-reviews__count {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.owner-reviews__item {
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+}
+
+.owner-reviews__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.owner-reviews__rater {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.owner-reviews__date {
+  font-size: 0.78rem;
+  color: #6c757d;
+}
+
+.owner-reviews__car {
+  font-size: 0.82rem;
+  color: #667eea;
+  margin-bottom: 0.35rem;
+}
+
+.owner-reviews__comment {
+  margin: 0;
+  color: #495057;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.owner-reviews__empty {
+  color: #6c757d;
+  font-size: 0.92rem;
+  padding: 1rem;
+  background: #f8f9fc;
+  border-radius: 10px;
+}
+
+.review-modal__prompt {
+  color: #6c757d;
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+}
+
+.review-modal__stars {
+  margin-bottom: 1rem;
+}
+
+.review-modal__stars-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}

@@ -8,7 +8,9 @@ import "../components/BookingTimeline.css";
 import Spinner from "../components/Spinner";
 import PayBookingModal from "../components/PayBookingModal";
 import TripHandoverModal from "../components/TripHandoverModal";
+import ReviewModal from "../components/ReviewModal";
 import paymentAPIService from "../features/payments/paymentAPIService";
+import ratingAPIService from "../features/ratings/ratingAPIService";
 import {
   bookingStatusLabel,
   bookingStatusVariant,
@@ -34,6 +36,8 @@ const MyBookingsPage = () => {
   const [payTarget, setPayTarget] = useState(null);
   const [completeTarget, setCompleteTarget] = useState(null);
   const [completeSubmitting, setCompleteSubmitting] = useState(false);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [pollingPkid, setPollingPkid] = useState(null);
   const pollRef = useRef(null);
 
@@ -128,6 +132,28 @@ const MyBookingsPage = () => {
       dispatch(getMyBookings());
     } else {
       toast.error(result.payload || "Could not complete trip");
+    }
+  };
+
+  const handleReviewSubmit = async ({ rating, comment }) => {
+    if (!reviewTarget) return;
+    setReviewSubmitting(true);
+    try {
+      await ratingAPIService.createBookingReview(reviewTarget.pkid, {
+        rating,
+        comment,
+      });
+      toast.success("Thank you for your review!");
+      setReviewTarget(null);
+      dispatch(getMyBookings());
+    } catch (err) {
+      const msg =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        "Could not submit review";
+      toast.error(msg);
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -251,6 +277,21 @@ const MyBookingsPage = () => {
                           Complete trip (return)
                         </Button>
                       )}
+                      {booking.status === "COMPLETED" && !booking.has_review && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="btn-accent"
+                          onClick={() => setReviewTarget(booking)}
+                        >
+                          Rate owner
+                        </Button>
+                      )}
+                      {booking.status === "COMPLETED" && booking.has_review && (
+                        <Badge bg="success" className="align-self-center">
+                          Reviewed
+                        </Badge>
+                      )}
                     </div>
                   </Card.Body>
                 </Card>
@@ -276,6 +317,14 @@ const MyBookingsPage = () => {
         booking={completeTarget}
         onSubmit={handleCompleteSubmit}
         isSubmitting={completeSubmitting}
+      />
+
+      <ReviewModal
+        show={Boolean(reviewTarget)}
+        onHide={() => setReviewTarget(null)}
+        booking={reviewTarget}
+        onSubmit={handleReviewSubmit}
+        isSubmitting={reviewSubmitting}
       />
     </Container>
   );

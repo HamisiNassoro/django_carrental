@@ -42,10 +42,13 @@ class CarFilter(django_filters.FilterSet):
     price = django_filters.NumberFilter()
     price__gt = django_filters.NumberFilter(field_name="price", lookup_expr="gt")
     price__lt = django_filters.NumberFilter(field_name="price", lookup_expr="lt")
+    min_price = django_filters.NumberFilter(field_name="price", lookup_expr="gte")
+    max_price = django_filters.NumberFilter(field_name="price", lookup_expr="lte")
+    min_seats = django_filters.NumberFilter(field_name="total_seats", lookup_expr="gte")
 
     class Meta:
         model = Car
-        fields = ["advert_type", "car_type", "price"]
+        fields = ["advert_type", "car_type", "price", "min_price", "max_price", "min_seats"]
 
 
 class ListAllCarsAPIView(generics.ListAPIView):
@@ -58,11 +61,16 @@ class ListAllCarsAPIView(generics.ListAPIView):
     ]
 
     filterset_class = CarFilter
-    search_fields = ["country", "city"]
-    ordering_fields = ["created_at"]
+    search_fields = ["title", "description", "city", "country"]
+    ordering_fields = ["created_at", "-created_at", "price", "-price"]
 
     def get_queryset(self):
-        queryset = Car.objects.all().order_by("-created_at")
+        queryset = Car.objects.all()
+        ordering = self.request.query_params.get("ordering", "-created_at")
+        if ordering in self.ordering_fields:
+            queryset = queryset.order_by(ordering)
+        else:
+            queryset = queryset.order_by("-created_at")
 
         rentals_only = self.request.query_params.get("rentals_only", "").lower()
         if rentals_only in ("1", "true", "yes"):
@@ -135,7 +143,7 @@ class CarDetailView(APIView):
             car.views += 1
             car.save()
 
-        serializer = CarSerializer(car, context={"request": request})
+        serializer = CarDetailSerializer(car, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

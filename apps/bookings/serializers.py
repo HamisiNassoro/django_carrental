@@ -108,6 +108,7 @@ class BookingDetailSerializer(BookingSerializer):
     latest_transaction = serializers.SerializerMethodField()
     pickup_photo_url = serializers.SerializerMethodField()
     return_photo_url = serializers.SerializerMethodField()
+    has_review = serializers.SerializerMethodField()
 
     class Meta(BookingSerializer.Meta):
         fields = BookingSerializer.Meta.fields + [
@@ -115,7 +116,11 @@ class BookingDetailSerializer(BookingSerializer):
             "latest_transaction",
             "pickup_photo_url",
             "return_photo_url",
+            "has_review",
         ]
+
+    def get_has_review(self, obj):
+        return hasattr(obj, "renter_review")
 
     def _photo_url(self, obj, field_name):
         photo = getattr(obj, field_name, None)

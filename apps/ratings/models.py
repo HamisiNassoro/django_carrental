@@ -21,6 +21,7 @@ class Rating(TimeStampedUUIDModel):
         verbose_name=_("User providing the rating"),
         on_delete=models.SET_NULL,
         null=True,
+        related_name="reviews_given",
     )
     car_owner = models.ForeignKey(
         Profile,
@@ -29,16 +30,29 @@ class Rating(TimeStampedUUIDModel):
         on_delete=models.SET_NULL,
         null=True,
     )
+    booking = models.OneToOneField(
+        "bookings.Booking",
+        verbose_name=_("Booking"),
+        related_name="renter_review",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     rating = models.IntegerField(
         verbose_name=_("Rating"),
         choices=Range.choices,
         help_text="1=Poor, 2=Fair, 3=Good, 4=Very Good, 5=Excellent",
-        default=0,
     )
-    comment = models.TextField(verbose_name=_("Comment"))
+    comment = models.TextField(verbose_name=_("Comment"), blank=True)
 
     class Meta:
-        unique_together = ["rater", "car_owner"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["booking"],
+                condition=models.Q(booking__isnull=False),
+                name="unique_review_per_booking",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.car_owner} rated at {self.rating}"

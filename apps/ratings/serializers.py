@@ -4,17 +4,34 @@ from .models import Rating
 
 
 class RatingSerializer(serializers.ModelSerializer):
-    rater = serializers.SerializerMethodField(read_only=True)
-    car_owner = serializers.SerializerMethodField(read_only=True)
+    rater_name = serializers.SerializerMethodField()
+    car_title = serializers.SerializerMethodField()
 
     class Meta:
         model = Rating
-        exclude = ["updated_at", "pkid"]
+        fields = [
+            "id",
+            "rating",
+            "comment",
+            "created_at",
+            "rater_name",
+            "car_title",
+        ]
 
-    #### Since i said rater and car_owner are method fields , define as below:
+    def get_rater_name(self, obj):
+        if not obj.rater:
+            return "Anonymous"
+        first = (obj.rater.first_name or "").strip()
+        if first:
+            return f"{first[0].upper()}."
+        return obj.rater.username[:1].upper() + "."
 
-    def get_rater(self, obj):
-        return obj.rater.username
+    def get_car_title(self, obj):
+        if obj.booking_id and obj.booking:
+            return obj.booking.car.title
+        return None
 
-    def get_car_owner(self, obj):
-        return obj.car_owner.user.username
+
+class CreateBookingReviewSerializer(serializers.Serializer):
+    rating = serializers.ChoiceField(choices=Rating.Range.choices)
+    comment = serializers.CharField(required=False, allow_blank=True, max_length=2000)
