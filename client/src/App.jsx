@@ -11,6 +11,7 @@ import Register from "./components/Register";
 import AuthTest from "./components/AuthTest";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthInitializer from "./components/AuthInitializer";
+import TripLocationSharingRunner from "./components/TripLocationSharingRunner";
 import HomePage from "./pages/HomePage";
 import CarsPage from "./pages/CarsPage";
 import CarDetailPage from "./pages/CarDetailPage";
@@ -28,6 +29,7 @@ const App = () => {
 	return (
 		<Router>
 			<AuthInitializer>
+				<TripLocationSharingRunner />
 				<Header />
 				<main className="py-3">
 					<Routes>

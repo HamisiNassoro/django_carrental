@@ -1,0 +1,84 @@
+.trip-tracking-map {
+  height: 360px;
+  width: 100%;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.trip-vehicle-marker {
+  background: transparent;
+  border: none;
+}
+
+.trip-vehicle-marker__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(26, 26, 46, 0.35));
+  transition: transform 0.6s ease;
+}
+
+.trip-vehicle-marker__inner svg {
+  display: block;
+}
+
+.trip-location-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.trip-location-status__badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+}
+
+.trip-location-status__badge--live {
+  background: rgba(25, 135, 84, 0.12);
+  color: #198754;
+}
+
+.trip-location-status__badge--stale {
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+}
+
+.trip-location-status__badge--off {
+  background: rgba(108, 117, 125, 0.12);
+  color: #6c757d;
+}
+
+.trip-location-meta {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.trip-sharing-panel {
+  background: #f8f9fc;
+  border: 1px solid #eef1f6;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.trip-sharing-panel--active {
+  border-color: rgba(25, 135, 84, 0.25);
+  background: rgba(25, 135, 84, 0.06);
+}
+
+.trip-sharing-panel__title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #1a1a2e;
+  margin-bottom: 0.25rem;
+}
+
+.trip-sharing-panel__text {
+  font-size: 0.82rem;
+  color: #6c757d;
+  margin-bottom: 0.65rem;
+}

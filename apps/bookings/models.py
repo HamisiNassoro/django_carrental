@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -52,6 +53,11 @@ class Booking(TimeStampedUUIDModel):
     return_mileage = models.PositiveIntegerField(blank=True, null=True)
     return_notes = models.TextField(blank=True)
     return_photo = models.ImageField(upload_to="handover/return/", blank=True, null=True)
+    location_sharing_enabled = models.BooleanField(
+        default=False,
+        help_text="Renter opted in to share GPS during this active rental",
+    )
+    location_sharing_started_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -68,3 +74,33 @@ class Booking(TimeStampedUUIDModel):
 
     def __str__(self) -> str:
         return f"Booking #{self.pkid} {self.car.title} ({self.start_date} -> {self.end_date})"
+
+
+class BookingLocationPing(TimeStampedUUIDModel):
+    class Source(models.TextChoices):
+        RENTER_PHONE = "renter_phone", _("Renter phone")
+
+    booking = models.ForeignKey(
+        Booking,
+        related_name="location_pings",
+        on_delete=models.CASCADE,
+    )
+    location = gis_models.PointField(srid=4326)
+    accuracy_m = models.FloatField(blank=True, null=True)
+    speed_kmh = models.FloatField(blank=True, null=True)
+    heading = models.FloatField(blank=True, null=True)
+    recorded_at = models.DateTimeField()
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.RENTER_PHONE,
+    )
+
+    class Meta:
+        ordering = ["-recorded_at"]
+        indexes = [
+            models.Index(fields=["booking", "-recorded_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Ping booking #{self.booking_id} @ {self.recorded_at}"

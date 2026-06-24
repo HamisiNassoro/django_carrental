@@ -40,6 +40,8 @@ class BookingSerializer(serializers.ModelSerializer):
             "return_mileage",
             "return_notes",
             "return_photo",
+            "location_sharing_enabled",
+            "location_sharing_started_at",
             "created_at",
             "updated_at",
         ]
@@ -60,6 +62,8 @@ class BookingSerializer(serializers.ModelSerializer):
             "return_mileage",
             "return_notes",
             "return_photo",
+            "location_sharing_enabled",
+            "location_sharing_started_at",
             "created_at",
             "updated_at",
         ]

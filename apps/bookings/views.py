@@ -173,6 +173,7 @@ def complete_booking(request, pkid):
     now = timezone.now()
     booking.status = BookingStatus.COMPLETED
     booking.completed_at = now
+    booking.location_sharing_enabled = False
     booking.return_mileage = handover_data["mileage"]
     booking.return_notes = handover_data.get("notes", "")
     if handover_data.get("photo"):
@@ -181,6 +182,7 @@ def complete_booking(request, pkid):
         update_fields=[
             "status",
             "completed_at",
+            "location_sharing_enabled",
             "return_mileage",
             "return_notes",
             "return_photo",

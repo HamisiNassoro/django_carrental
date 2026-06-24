@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import location_views
 
 urlpatterns = [
     path("", views.BookingCreateAPIView.as_view(), name="booking-create"),
@@ -13,4 +14,7 @@ urlpatterns = [
     path("<int:pkid>/cancel/", views.cancel_booking, name="booking-cancel"),
     path("<int:pkid>/activate/", views.activate_booking, name="booking-activate"),
     path("<int:pkid>/complete/", views.complete_booking, name="booking-complete"),
+    path("<int:pkid>/location/", location_views.booking_trip_location, name="booking-trip-location"),
+    path("<int:pkid>/location/ping/", location_views.booking_location_ping, name="booking-location-ping"),
+    path("<int:pkid>/location/sharing/", location_views.booking_location_sharing, name="booking-location-sharing"),
 ]

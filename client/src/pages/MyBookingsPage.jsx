@@ -9,6 +9,8 @@ import Spinner from "../components/Spinner";
 import PayBookingModal from "../components/PayBookingModal";
 import TripHandoverModal from "../components/TripHandoverModal";
 import ReviewModal from "../components/ReviewModal";
+import TripSharingPanel from "../components/TripSharingPanel";
+import TripLocationModal from "../components/TripLocationModal";
 import paymentAPIService from "../features/payments/paymentAPIService";
 import ratingAPIService from "../features/ratings/ratingAPIService";
 import {
@@ -38,6 +40,7 @@ const MyBookingsPage = () => {
   const [completeSubmitting, setCompleteSubmitting] = useState(false);
   const [reviewTarget, setReviewTarget] = useState(null);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [locationMapTarget, setLocationMapTarget] = useState(null);
   const [pollingPkid, setPollingPkid] = useState(null);
   const pollRef = useRef(null);
 
@@ -246,6 +249,12 @@ const MyBookingsPage = () => {
                     {booking.notes && (
                       <p className="text-muted small mb-3">{booking.notes}</p>
                     )}
+                    {booking.status === "ACTIVE" && (
+                      <TripSharingPanel
+                        booking={booking}
+                        onUpdated={() => dispatch(getMyBookings())}
+                      />
+                    )}
                     <div className="d-flex flex-wrap gap-2">
                       {needsPayment && !isPolling && (
                         <Button
@@ -269,13 +278,22 @@ const MyBookingsPage = () => {
                         </Button>
                       )}
                       {booking.status === "ACTIVE" && (
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => setCompleteTarget(booking)}
-                        >
-                          Complete trip (return)
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline-info"
+                            size="sm"
+                            onClick={() => setLocationMapTarget(booking)}
+                          >
+                            View on map
+                          </Button>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => setCompleteTarget(booking)}
+                          >
+                            Complete trip (return)
+                          </Button>
+                        </>
                       )}
                       {booking.status === "COMPLETED" && !booking.has_review && (
                         <Button
@@ -325,6 +343,12 @@ const MyBookingsPage = () => {
         booking={reviewTarget}
         onSubmit={handleReviewSubmit}
         isSubmitting={reviewSubmitting}
+      />
+
+      <TripLocationModal
+        show={Boolean(locationMapTarget)}
+        onHide={() => setLocationMapTarget(null)}
+        booking={locationMapTarget}
       />
     </Container>
   );

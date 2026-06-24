@@ -8,6 +8,7 @@ import OwnerEarningsSummary from "../components/OwnerEarningsSummary";
 import OwnerReviewsSection from "../components/OwnerReviewsSection";
 import Spinner from "../components/Spinner";
 import TripHandoverModal from "../components/TripHandoverModal";
+import TripLocationModal from "../components/TripLocationModal";
 import bookingAPIService from "../features/bookings/bookingAPIService";
 import profileAPIService from "../features/profile/profileAPIService";
 import {
@@ -58,6 +59,7 @@ const OwnerBookingsPage = () => {
   const [handoverTarget, setHandoverTarget] = useState(null);
   const [handoverMode, setHandoverMode] = useState("pickup");
   const [handoverSubmitting, setHandoverSubmitting] = useState(false);
+  const [trackTarget, setTrackTarget] = useState(null);
 
   useEffect(() => {
     dispatch(getOwnerBookings());
@@ -231,13 +233,22 @@ const OwnerBookingsPage = () => {
                       </Button>
                     )}
                     {booking.status === "ACTIVE" && (
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        onClick={() => openHandover(booking, "return")}
-                      >
-                        Complete trip (return)
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline-info"
+                          size="sm"
+                          onClick={() => setTrackTarget(booking)}
+                        >
+                          Track trip
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => openHandover(booking, "return")}
+                        >
+                          Complete trip (return)
+                        </Button>
+                      </>
                     )}
                   </div>
                 </Card.Body>
@@ -269,6 +280,13 @@ const OwnerBookingsPage = () => {
         booking={handoverTarget}
         onSubmit={handleHandoverSubmit}
         isSubmitting={handoverSubmitting}
+      />
+
+      <TripLocationModal
+        show={Boolean(trackTarget)}
+        onHide={() => setTrackTarget(null)}
+        booking={trackTarget}
+        isOwner
       />
     </Container>
   );
