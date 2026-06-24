@@ -14,6 +14,7 @@ import {
 	FaMapMarkerAlt,
 	FaUserCircle,
 	FaChevronDown,
+	FaArrowRight,
 } from "react-icons/fa";
 import { LinkContainer } from "react-router-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
@@ -80,6 +81,22 @@ const Header = () => {
 		</LinkContainer>
 	);
 
+	const renderAuthButtons = (variant = "desktop") => (
+		<div className={`header-auth-group header-auth-group--${variant}`}>
+			<LinkContainer to="/login">
+				<Button className="header-auth-btn header-auth-btn--login">
+					Login
+				</Button>
+			</LinkContainer>
+			<LinkContainer to="/register">
+				<Button className="header-auth-btn header-auth-btn--register">
+					Register
+					<FaArrowRight className="header-auth-btn__arrow" aria-hidden="true" />
+				</Button>
+			</LinkContainer>
+		</div>
+	);
+
 	return (
 		<header className="site-header">
 			<Navbar
@@ -111,11 +128,7 @@ const Header = () => {
 								<FaUserCircle />
 							</button>
 						) : (
-							<LinkContainer to="/login">
-								<Button className="login-btn login-btn--compact" size="sm">
-									Login
-								</Button>
-							</LinkContainer>
+							renderAuthButtons("mobile-inline")
 						)}
 					</div>
 
@@ -195,18 +208,7 @@ const Header = () => {
 									</NavDropdown.Item>
 								</NavDropdown>
 							) : (
-								<>
-									<LinkContainer to="/login">
-										<Button className="login-btn" size="sm">
-											Login
-										</Button>
-									</LinkContainer>
-									<LinkContainer to="/register">
-										<Button className="register-btn" size="sm">
-											Register
-										</Button>
-									</LinkContainer>
-								</>
+								renderAuthButtons("desktop")
 							)}
 						</div>
 
@@ -228,12 +230,10 @@ const Header = () => {
 
 						{!user && (
 							<div className="header-mobile-auth d-xl-none">
-								<LinkContainer to="/login" className="d-grid mb-2">
-									<Button className="login-btn">Login</Button>
-								</LinkContainer>
-								<LinkContainer to="/register" className="d-grid">
-									<Button className="register-btn">Register</Button>
-								</LinkContainer>
+								<p className="header-mobile-auth__hint">
+									New here? Create an account to book cars or list your own.
+								</p>
+								{renderAuthButtons("mobile-menu")}
 							</div>
 						)}
 					</Navbar.Collapse>
