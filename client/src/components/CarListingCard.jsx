@@ -65,15 +65,14 @@ const CarListingCard = ({ car, bookingState, className = "" }) => {
           </p>
         )}
 
-        <Link
+        <Button
+          as={Link}
           to={`/car/${car.slug}`}
           state={bookingState}
-          className="text-decoration-none"
+          className="btn-accent car-listing-card__cta"
         >
-          <Button className="w-100 btn-accent car-listing-card__cta">
-            View & Book
-          </Button>
-        </Link>
+          View & book
+        </Button>
       </Card.Body>
     </Card>
   );

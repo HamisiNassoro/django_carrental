@@ -81,14 +81,14 @@ function Login() {
   }
 
   return (
-    <>
-      <section className="heading">
-        <h1>Welcome Back</h1>
-        <p>Sign in with email or phone</p>
-      </section>
+    <div className="auth-page">
+      <section className="form auth-card">
+        <div className="auth-card__header">
+          <h1>Welcome back</h1>
+          <p>Sign in with email or phone OTP</p>
+        </div>
 
-      <section className="form">
-        <div className="login-tabs mb-4">
+        <div className="login-tabs">
           <button
             type="button"
             className={`login-tab ${activeTab === "email" ? "active" : ""}`}
@@ -108,13 +108,16 @@ function Login() {
         {activeTab === "email" ? (
           <form onSubmit={onSubmit}>
             <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Email address
+              </label>
               <input
                 type="email"
                 className={`form-control ${errors.email ? "error" : ""}`}
                 id="email"
                 name="email"
                 value={email}
-                placeholder="Enter your email address"
+                placeholder="you@example.com"
                 onChange={onChange}
                 required
               />
@@ -123,6 +126,9 @@ function Login() {
               )}
             </div>
             <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
               <PasswordInput
                 className={errors.password ? "error" : ""}
                 id="password"
@@ -136,9 +142,9 @@ function Login() {
                 <small className="field-error">{errors.password}</small>
               )}
             </div>
-            <div className="form-group">
+            <div className="form-group mb-0">
               <button type="submit" className="btn btn-block" disabled={isSubmitting}>
-                {isSubmitting ? "Signing In..." : "Sign In"}
+                {isSubmitting ? "Signing in…" : "Sign in"}
               </button>
             </div>
           </form>
@@ -146,16 +152,17 @@ function Login() {
           <PhoneLoginForm />
         )}
 
-        <div className="form-group text-center">
-            <p>
+        <div className="auth-card__footer">
+          <p className="auth-card__footer-text">
             Don&apos;t have an account?{" "}
-            <Link to="/register">Create one with email</Link>
-            {" "}
-            or use the Phone tab — we&apos;ll create your account when you verify your number.
+            <Link to="/register">Sign up with email</Link>
+          </p>
+          <p className="auth-card__footer-hint">
+            New to the app? Use the Phone tab — we&apos;ll create your account when you verify your number.
           </p>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 

@@ -160,23 +160,25 @@ const CarsPage = () => {
       </Row>
 
       <Card className="border-0 shadow-sm mb-4 cars-search-card">
-        <Card.Body className="p-4">
-          <Form onSubmit={handleSearchSubmit}>
-            <Row className="g-3 align-items-end">
-              <Col md={6} lg={3}>
-                <Form.Label className="small text-muted mb-1">Pickup date</Form.Label>
+        <Card.Body className="cars-search-card__body">
+          <Form onSubmit={handleSearchSubmit} className="cars-search-form">
+            <Row className="g-2 align-items-end">
+              <Col xs={6} md={3}>
+                <Form.Label className="cars-search-form__label">Pickup</Form.Label>
                 <Form.Control
                   type="date"
+                  className="cars-search-form__control"
                   value={search.start_date}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, start_date: e.target.value }))
                   }
                 />
               </Col>
-              <Col md={6} lg={3}>
-                <Form.Label className="small text-muted mb-1">Return date</Form.Label>
+              <Col xs={6} md={3}>
+                <Form.Label className="cars-search-form__label">Return</Form.Label>
                 <Form.Control
                   type="date"
+                  className="cars-search-form__control"
                   value={search.end_date}
                   min={search.start_date}
                   onChange={(e) =>
@@ -184,9 +186,10 @@ const CarsPage = () => {
                   }
                 />
               </Col>
-              <Col md={6} lg={2}>
-                <Form.Label className="small text-muted mb-1">Vehicle type</Form.Label>
+              <Col xs={6} md={3}>
+                <Form.Label className="cars-search-form__label">Vehicle type</Form.Label>
                 <Form.Select
+                  className="cars-search-form__control"
                   value={search.car_type}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -202,44 +205,50 @@ const CarsPage = () => {
                   ))}
                 </Form.Select>
               </Col>
-              <Col md={6} lg={2}>
-                <Form.Label className="small text-muted mb-1">City</Form.Label>
+              <Col xs={6} md={3}>
+                <Form.Label className="cars-search-form__label">City</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="e.g. Nairobi"
+                  className="cars-search-form__control"
+                  placeholder="Nairobi"
                   value={search.city}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, city: e.target.value }))
                   }
                 />
               </Col>
-              <Col md={6} lg={2}>
-                <Form.Label className="small text-muted mb-1">Min price (KSh/day)</Form.Label>
+            </Row>
+            <Row className="g-2 align-items-end mt-2">
+              <Col xs={6} md={2}>
+                <Form.Label className="cars-search-form__label">Min price</Form.Label>
                 <Form.Control
                   type="number"
                   min="0"
-                  placeholder="Any"
+                  className="cars-search-form__control"
+                  placeholder="KSh/day"
                   value={search.min_price}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, min_price: e.target.value }))
                   }
                 />
               </Col>
-              <Col md={6} lg={2}>
-                <Form.Label className="small text-muted mb-1">Max price (KSh/day)</Form.Label>
+              <Col xs={6} md={2}>
+                <Form.Label className="cars-search-form__label">Max price</Form.Label>
                 <Form.Control
                   type="number"
                   min="0"
-                  placeholder="Any"
+                  className="cars-search-form__control"
+                  placeholder="KSh/day"
                   value={search.max_price}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, max_price: e.target.value }))
                   }
                 />
               </Col>
-              <Col md={4} lg={2}>
-                <Form.Label className="small text-muted mb-1">Min seats</Form.Label>
+              <Col xs={6} md={2}>
+                <Form.Label className="cars-search-form__label">Min seats</Form.Label>
                 <Form.Select
+                  className="cars-search-form__control"
                   value={search.min_seats}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, min_seats: e.target.value }))
@@ -253,9 +262,10 @@ const CarsPage = () => {
                   ))}
                 </Form.Select>
               </Col>
-              <Col md={4} lg={2}>
-                <Form.Label className="small text-muted mb-1">Sort by</Form.Label>
+              <Col xs={6} md={3}>
+                <Form.Label className="cars-search-form__label">Sort by</Form.Label>
                 <Form.Select
+                  className="cars-search-form__control"
                   value={search.ordering}
                   onChange={(e) =>
                     setSearch((prev) => ({ ...prev, ordering: e.target.value }))
@@ -266,20 +276,27 @@ const CarsPage = () => {
                   <option value="-price">Price: high to low</option>
                 </Form.Select>
               </Col>
-              <Col md={4} lg={2} className="d-flex gap-2 align-items-end">
-                <Button type="submit" className="btn-accent flex-grow-1">
+              <Col xs={12} md={3}>
+                <Form.Label className="cars-search-form__label cars-search-form__label--spacer">
                   Search
-                </Button>
-                {hasActiveSearch && (
-                  <Button
-                    type="button"
-                    variant="outline-secondary"
-                    onClick={handleClearSearch}
-                    title="Clear filters"
-                  >
-                    <FaTimes />
+                </Form.Label>
+                <div className="cars-search-form__actions">
+                  <Button type="submit" className="btn-accent cars-search-form__submit">
+                    Search
                   </Button>
-                )}
+                  {hasActiveSearch && (
+                    <Button
+                      type="button"
+                      variant="outline-secondary"
+                      className="cars-search-form__clear"
+                      onClick={handleClearSearch}
+                      title="Clear filters"
+                      aria-label="Clear filters"
+                    >
+                      <FaTimes />
+                    </Button>
+                  )}
+                </div>
               </Col>
             </Row>
           </Form>
@@ -287,8 +304,8 @@ const CarsPage = () => {
       </Card>
 
       {hasActiveSearch && (
-        <div className="d-flex flex-wrap gap-2 mb-4 align-items-center">
-          <span className="small text-muted me-1">Active filters:</span>
+        <div className="cars-active-filters mb-4">
+          <span className="cars-active-filters__label">Active filters:</span>
           {search.start_date && search.end_date && (
             <Badge bg="light" text="dark" className="cars-filter-badge">
               {search.start_date} → {search.end_date}
@@ -321,7 +338,7 @@ const CarsPage = () => {
           <Button
             variant="link"
             size="sm"
-            className="text-decoration-none p-0"
+            className="cars-active-filters__clear"
             onClick={handleClearSearch}
           >
             Clear all

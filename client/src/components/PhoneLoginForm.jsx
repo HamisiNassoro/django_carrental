@@ -72,7 +72,11 @@ const PhoneLoginForm = ({ disabled = false }) => {
     return (
       <form onSubmit={handleSendCode}>
         <div className="form-group">
+          <label htmlFor="phone-login-number" className="form-label">
+            Phone number
+          </label>
           <input
+            id="phone-login-number"
             type="tel"
             className="form-control"
             placeholder="0712345678 or 254712345678"
@@ -110,7 +114,11 @@ const PhoneLoginForm = ({ disabled = false }) => {
         </button>
       </p>
       <div className="form-group">
+        <label htmlFor="phone-login-otp" className="form-label">
+          Verification code
+        </label>
         <input
+          id="phone-login-otp"
           type="text"
           className="form-control"
           inputMode="numeric"

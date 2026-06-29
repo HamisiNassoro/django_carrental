@@ -33,6 +33,9 @@
 }
 
 .car-listing-card__body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 1.15rem 1.25rem 1.25rem;
 }
 
@@ -69,7 +72,28 @@
   align-items: center;
 }
 
+a.car-listing-card__cta.btn,
 .car-listing-card__cta {
+  width: 100%;
+  height: 42px;
+  margin-top: auto;
+  padding: 0 1rem !important;
   border-radius: 10px;
-  font-weight: 600;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  vertical-align: middle;
+}
+
+.car-listing-card__cta:hover,
+.car-listing-card__cta:focus {
+  transform: none;
 }

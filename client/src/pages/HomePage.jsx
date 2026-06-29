@@ -75,6 +75,8 @@ const HomePage = () => {
 
   const fleetCars = useMemo(() => (cars || []).slice(0, 6), [cars]);
 
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+
   const bookingState = useMemo(() => {
     if (!bookingForm.rentalDate || !bookingForm.returnDate) return undefined;
     return {
@@ -157,16 +159,22 @@ const HomePage = () => {
 
             <Col lg={6}>
               <Card className="home-booking-card">
-                <Card.Body>
+                <Card.Body className="home-booking-card__body">
                   <h2 className="home-booking-card__title">Plan your trip</h2>
-                  <Form onSubmit={handleBookNow}>
-                    <Row className="g-3">
-                      <Col sm={6}>
-                        <Form.Label className="small text-muted">
-                          Pickup date
+                  <p className="home-booking-card__subtitle">
+                    Pick your dates and preferences — we&apos;ll show matching listings.
+                  </p>
+                  <Form onSubmit={handleBookNow} className="home-booking-form">
+                    <Row className="g-2">
+                      <Col xs={6}>
+                        <Form.Label htmlFor="home-pickup-date" className="home-booking-form__label">
+                          Pickup
                         </Form.Label>
                         <Form.Control
+                          id="home-pickup-date"
                           type="date"
+                          className="home-booking-form__control"
+                          min={today}
                           value={bookingForm.rentalDate}
                           onChange={(e) =>
                             handleBookingChange("rentalDate", e.target.value)
@@ -174,13 +182,15 @@ const HomePage = () => {
                           required
                         />
                       </Col>
-                      <Col sm={6}>
-                        <Form.Label className="small text-muted">
-                          Return date
+                      <Col xs={6}>
+                        <Form.Label htmlFor="home-return-date" className="home-booking-form__label">
+                          Return
                         </Form.Label>
                         <Form.Control
+                          id="home-return-date"
                           type="date"
-                          min={bookingForm.rentalDate}
+                          className="home-booking-form__control"
+                          min={bookingForm.rentalDate || today}
                           value={bookingForm.returnDate}
                           onChange={(e) =>
                             handleBookingChange("returnDate", e.target.value)
@@ -188,11 +198,13 @@ const HomePage = () => {
                           required
                         />
                       </Col>
-                      <Col sm={6}>
-                        <Form.Label className="small text-muted">
+                      <Col xs={6}>
+                        <Form.Label htmlFor="home-vehicle-type" className="home-booking-form__label">
                           Vehicle type
                         </Form.Label>
                         <Form.Select
+                          id="home-vehicle-type"
+                          className="home-booking-form__control"
                           value={bookingForm.carType}
                           onChange={(e) =>
                             handleBookingChange("carType", e.target.value)
@@ -206,11 +218,15 @@ const HomePage = () => {
                           ))}
                         </Form.Select>
                       </Col>
-                      <Col sm={6}>
-                        <Form.Label className="small text-muted">City</Form.Label>
+                      <Col xs={6}>
+                        <Form.Label htmlFor="home-city" className="home-booking-form__label">
+                          City
+                        </Form.Label>
                         <Form.Control
+                          id="home-city"
                           type="text"
-                          placeholder="e.g. Nairobi"
+                          className="home-booking-form__control"
+                          placeholder="Nairobi"
                           value={bookingForm.rentalPlace}
                           onChange={(e) =>
                             handleBookingChange("rentalPlace", e.target.value)
@@ -220,8 +236,7 @@ const HomePage = () => {
                       <Col xs={12}>
                         <Button
                           type="submit"
-                          size="lg"
-                          className="w-100 btn-accent"
+                          className="home-booking-form__submit btn-accent"
                         >
                           Search available cars
                         </Button>
@@ -283,7 +298,13 @@ const HomePage = () => {
                   : "Be among the first — list your car or check back soon."}
               </p>
             </div>
-            <Button as={Link} to="/cars" variant="link" className="fw-bold p-0">
+            <Button
+              as={Link}
+              to="/cars"
+              variant="outline-secondary"
+              size="sm"
+              className="home-section__view-all"
+            >
               View all vehicles →
             </Button>
           </div>
